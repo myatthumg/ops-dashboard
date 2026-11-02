@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operation Data Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300..900;1,300..900&display=swap">
+<style>[hidden]{display:none!important}</style>
+<style>
+/* Layout: a single macOS window on a quiet wallpaper. Translucent source-list sidebar, unified toolbar, scrolling content, right-hand inspector, sheets for upload/check/delete. */
+:root{
+  --wall-a:#b9c7d3; --wall-b:#d9d3e2; --wall-c:#c4d6d0;
+  --win:#f5f5f7; --side:rgba(229,230,236,.92); --bar:rgba(245,245,247,.92);
+  --surface:#ffffff; --surface-2:#f0f0f3; --hover:rgba(20,22,40,.05); --sel:rgba(0,122,255,.12);
+  --line:rgba(20,22,40,.11); --line-2:rgba(20,22,40,.06);
+  --fg:#1c1c21; --fg-2:#565863; --fg-3:#868893;
+  --blue:#0068d6; --green:#1f7f37; --orange:#b85f00; --red:#cc1220; --purple:#8340a6; --teal:#0b7488; --pink:#c11d4b; --indigo:#4a43c4; --yellow:#946b00;
+  --shadow:0 24px 70px rgba(28,34,58,.28),0 0 0 .5px rgba(0,0,0,.2);
+  --pop:0 12px 40px rgba(20,24,40,.22),0 0 0 .5px rgba(0,0,0,.14);
+  --font:"Roboto",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --num:"Roboto",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --mm:"Noto Sans Myanmar","Myanmar Text","Myanmar Sangam MN",var(--font);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --wall-a:#17202c; --wall-b:#271f30; --wall-c:#14262a;
+  --win:#1d1d20; --side:rgba(40,40,45,.9); --bar:rgba(33,33,37,.94);
+  --surface:#27272b; --surface-2:#222225; --hover:rgba(255,255,255,.055); --sel:rgba(10,132,255,.22);
+  --line:rgba(255,255,255,.11); --line-2:rgba(255,255,255,.06);
+  --fg:#f2f2f5; --fg-2:#aeb0ba; --fg-3:#80828c;
+  --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; --red:#ff453a; --purple:#bf5af2; --teal:#40c8e0; --pink:#ff375f; --indigo:#7d7aff; --yellow:#ffd60a;
+  --shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.14);
+  --pop:0 12px 40px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.14);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --wall-a:#17202c; --wall-b:#271f30; --wall-c:#14262a;
+  --win:#1d1d20; --side:rgba(40,40,45,.9); --bar:rgba(33,33,37,.94);
+  --surface:#27272b; --surface-2:#222225; --hover:rgba(255,255,255,.055); --sel:rgba(10,132,255,.22);
+  --line:rgba(255,255,255,.11); --line-2:rgba(255,255,255,.06);
+  --fg:#f2f2f5; --fg-2:#aeb0ba; --fg-3:#80828c;
+  --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; --red:#ff453a; --purple:#bf5af2; --teal:#40c8e0; --pink:#ff375f; --indigo:#7d7aff; --yellow:#ffd60a;
+  --shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.14);
+  --pop:0 12px 40px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.14);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font:13px/1.45 var(--font);color:var(--fg);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(1200px 700px at 12% 0%,var(--wall-c),transparent 60%),radial-gradient(900px 700px at 100% 100%,var(--wall-b),transparent 60%),var(--wall-a);
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;text-transform:capitalize}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:1px;border-radius:6px}
+.num,.big{font-variant-numeric:tabular-nums}
+
+/* window */
+.win{position:relative;height:100%;display:grid;grid-template-columns:232px minmax(0,1fr);background:var(--win);overflow:hidden}
+.win.fs{grid-template-columns:0 minmax(0,1fr)}
+.win.fs .side{visibility:hidden}
+.win.fs .content{padding:28px 40px 56px}
+.win.fs .hero h1{font-size:32px}
+.win.fs .kpi .big,.win.fs .rcard .cnt{font-size:34px}
+.fsbadge{display:none;font-size:11px;font-weight:600;color:var(--green);border:1px solid color-mix(in srgb,var(--green) 40%,transparent);border-radius:10px;padding:1px 8px;margin-left:8px;vertical-align:1px}
+.win.fs .fsbadge{display:inline-block}
+@media (min-width:1600px){.win.fs .kpis{grid-template-columns:repeat(8,minmax(0,1fr))}}
+.win.nosb{grid-template-columns:0 minmax(0,1fr)}
+.win.nosb .side{visibility:hidden}
+
+/* sidebar */
+.side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.lights{display:flex;gap:8px;padding:18px 18px 12px}
+.lights i{width:12px;height:12px;border-radius:50%;display:block;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
+.lights button{width:12px;height:12px;border-radius:50%;border:0;padding:0;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18);background:#28c840;display:grid;place-items:center;color:transparent}
+.lights:hover button{color:rgba(0,0,0,.55)}
+.lights button svg{width:8px;height:8px}
+.lights i:nth-child(1){background:#ff5f57}.lights i:nth-child(2){background:#febc2e}.lights i:nth-child(3){background:#28c840}
+.sfind{margin:4px 12px 10px;display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:7px;background:var(--hover);border:0;color:var(--fg-3);text-align:left;width:calc(100% - 24px)}
+.sfind kbd{margin-left:auto;font:11px var(--font);color:var(--fg-3)}
+.snav{flex:1;overflow:auto;padding:0 10px 10px}
+.sgroup{font-size:11px;font-weight:600;color:var(--fg-3);padding:14px 8px 4px}
+.sitem{display:flex;align-items:center;gap:9px;width:100%;padding:5px 8px;border:0;background:none;border-radius:6px;text-align:left;font-size:13px}
+.sitem:hover{background:var(--hover)}
+.sitem.on{background:var(--sel)}
+.sitem .ico{width:18px;height:18px;display:grid;place-items:center;color:var(--c,var(--blue))}
+.sitem .ico svg{width:16px;height:16px}
+.badge{margin-left:auto;min-width:20px;padding:0 6px;height:18px;border-radius:9px;font:600 11px/18px var(--font);text-align:center;background:color-mix(in srgb,var(--fg) 10%,transparent);color:var(--fg-2)}
+.badge.hot{background:var(--red);color:#fff}
+.sfoot{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
+.avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12px;color:#fff;background:linear-gradient(135deg,#5e8bff,#a56bff)}
+.sfoot small{display:block;color:var(--fg-3);font-size:11px}
+
+/* main */
+.main{display:grid;grid-template-rows:auto auto minmax(0,1fr);min-width:0;min-height:0}
+.bar{display:flex;align-items:center;gap:8px;padding:10px 16px;min-height:52px;background:var(--bar);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tbtn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px;border:0;background:none;color:var(--fg-2);white-space:nowrap}
+.tbtn:hover{background:var(--hover);color:var(--fg)}
+.tbtn svg{width:16px;height:16px;flex:none}
+.tbtn.icon{width:30px;padding:0;justify-content:center}
+.tbtn.pri{background:var(--blue);color:#fff;font-weight:500}
+.tbtn.pri:hover{background:color-mix(in srgb,var(--blue) 88%,#000)}
+/* Give the Excel template and destructive day-delete actions clear, visible backgrounds */
+.tbtn[data-act="tpl"]{background:var(--blue);color:#fff;border:1px solid var(--blue);font-weight:600}
+.tbtn[data-act="tpl"]:hover{background:color-mix(in srgb,var(--blue) 86%,#000);color:#fff}
+.tbtn[data-act="del"]{background:var(--red);color:#fff;border:1px solid var(--red);font-weight:600}
+.tbtn[data-act="del"]:hover{background:color-mix(in srgb,var(--red) 86%,#000);color:#fff}
+.ttl{min-width:0;margin-right:auto;padding-left:4px}
+.ttl b{display:block;font-size:13px;font-weight:600}
+.ttl small{display:block;color:var(--fg-3);font-size:11px}
+.seg{display:inline-flex;background:var(--hover);border-radius:7px;padding:2px}
+.seg button{border:0;background:none;height:24px;padding:0 8px;border-radius:5px;color:var(--fg-2);display:inline-flex;align-items:center}
+.seg button svg{width:15px;height:15px}
+.seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.16)}
+.vsep{width:1px;height:20px;background:var(--line);margin:0 2px}
+.content{overflow:auto;min-height:0;padding:24px 28px 56px}
+.mnav{display:none;gap:6px;overflow-x:auto;margin:-6px 0 18px;padding-bottom:4px}
+.mnav button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:14px;height:28px;padding:0 12px}
+.mnav button.on{background:var(--blue);color:#fff;border-color:transparent}
+
+/* hero */
+.hero{padding:22px 24px;border-radius:12px;background:linear-gradient(120deg,color-mix(in srgb,var(--teal) 14%,var(--surface)),color-mix(in srgb,var(--indigo) 12%,var(--surface)));border:1px solid var(--line-2);margin-bottom:28px}
+.hero h1{margin:0 0 12px;font:700 28px/1.15 var(--num);letter-spacing:-.01em;text-wrap:balance}
+.hero h1 span{color:var(--fg-2);font-weight:600}
+.days{display:flex;flex-wrap:wrap;align-items:center;gap:8px 6px;padding:8px 16px;background:var(--bar);border-bottom:1px solid var(--line)}
+.days .dgrp{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.days .rng{margin-left:0;padding-left:12px;border-left:1px solid var(--line);display:flex;align-items:center;gap:8px;flex:none}
+.days .rlab{color:var(--fg-2);font-size:12px}
+.days .filters{gap:7px;padding-left:12px}
+.days .filters select{height:27px;min-width:82px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--fg);padding:0 7px;font:12px var(--font)}
+.days .filters select:last-child{min-width:112px}
+.rngf{display:grid;gap:10px;padding:10px 10px 8px;min-width:250px}
+.rngf label{display:grid;gap:4px;font-size:12px;color:var(--fg-2)}
+.rngf input{height:30px;border-radius:7px;border:1px solid var(--line);background:var(--surface);padding:0 8px;color:var(--fg)}
+.menu .rngf .acts{display:flex;justify-content:flex-end;gap:6px;margin:0}
+.menu .rngf .acts button{width:auto;display:inline-flex;justify-content:center;padding:0 12px;height:28px;border-radius:6px}
+.menu .rngf .acts .btn.pri:hover{background:color-mix(in srgb,var(--blue) 88%,#000)}
+.menu .rngf .acts .btn:not(.pri):hover{background:var(--surface-2);color:var(--fg)}
+.dpill{flex:none}
+
+.win.fs .days{padding-inline:40px}
+.days .dgrp > span:first-child{color:var(--fg-2);margin-right:4px;font-size:12px;white-space:nowrap}
+.dpill{border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 70%,transparent);height:26px;padding:0 11px;border-radius:13px;font-size:12px;color:var(--fg-2)}
+.dpill:hover{color:var(--fg);border-color:color-mix(in srgb,var(--fg) 25%,transparent)}
+.dpill.on{background:var(--blue);border-color:transparent;color:#fff;font-weight:500}
+.summary{font-size:15px;line-height:1.55;max-width:100%;margin:0 0 8px;color:var(--fg)}
+.summary b{font-variant-numeric:tabular-nums}
+.meta{margin:0;color:var(--fg-3);font-size:12px}
+
+/* sections */
+section{margin-bottom:30px}
+.sec-h{display:flex;align-items:flex-end;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.sec-h > div{margin-right:auto;min-width:0}
+h2{margin:0;font-size:21px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
+h3{margin:0;font-size:16px;line-height:1.3;font-weight:600}
+.sub{margin:3px 0 0;color:var(--fg-3);font-size:12.5px}
+.sec-h .sub{font-size:13px;margin-top:4px}
+.link{border:0;background:none;color:var(--blue);padding:0;font-weight:500}
+.link:hover{text-decoration:underline}
+.btn{height:28px;padding:0 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 1px 1px rgba(0,0,0,.04)}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--blue);color:#fff;border-color:transparent}
+.btn.red{background:var(--red);color:#fff;border-color:transparent}
+.btn svg{width:14px;height:14px}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* attention rings — the signature */
+.rings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rcard{position:relative;display:grid;grid-template-columns:minmax(0,1fr);gap:6px 14px;align-items:center;text-align:left;padding:16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);min-width:0}
+.rcard:hover{border-color:color-mix(in srgb,var(--c) 55%,transparent)}
+.rcard.first{background:color-mix(in srgb,var(--c) 9%,var(--surface));border-color:color-mix(in srgb,var(--c) 40%,transparent)}
+.rwrap{position:relative;width:64px;height:64px;grid-row:span 2}
+.rwrap span{position:absolute;inset:0;display:grid;place-items:center;font:700 13px var(--num)}
+.rcard .tn{font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rcard .cnt{font:800 30px/1 var(--num);font-variant-numeric:tabular-nums}
+.rcard .cnt small{font:500 12px var(--font);color:var(--fg-2);margin-left:6px}
+.rcard .why{grid-column:1/-1;color:var(--fg-2);font-size:12px;min-height:34px;margin-top:4px}
+.rcard .foot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-2);padding-top:10px;margin-top:2px;font-size:12px;color:var(--fg-3)}
+.rcard .foot b{color:var(--c);font-weight:600}
+.rcard .cnt small{font-size:13px}
+.cats{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:0}
+.cats li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--line-2);font-size:13px;color:var(--fg-2)}
+.cats li b{color:var(--fg);font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--c);display:inline-block;flex:none}
+.signed{color:var(--green)!important}
+
+/* kpi tiles */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.kpi{background:var(--surface);padding:14px 16px;border:0;text-align:left;color:var(--fg);display:grid;grid-template-columns:1fr auto;gap:2px 10px;min-width:0}
+.kpi:hover{background:var(--surface-2)}
+.kpi .kl{grid-column:1/-1;font-size:13px;color:var(--fg-2);display:flex;align-items:center;gap:6px}
+.kpi .big{font:700 26px/1.1 var(--num)}
+.kpi .kd{grid-column:1/-1;font-size:12.5px;color:var(--fg-3)}
+.kpi svg.spark{align-self:end}
+
+/* panels & tables */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
+.panel > .ph{display:flex;gap:12px;align-items:flex-start;padding:16px 16px 12px;flex-wrap:wrap}
+.panel > .ph > div:first-child{margin-right:auto;min-width:0}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.toggle{height:26px;padding:0 10px;border-radius:13px;border:1px solid var(--line);background:none;color:var(--fg-2);font-size:12px;display:inline-flex;align-items:center;gap:6px}
+.toggle.on{background:color-mix(in srgb,var(--orange) 16%,transparent);border-color:color-mix(in srgb,var(--orange) 45%,transparent);color:var(--orange);font-weight:500}
+.chip{height:26px;padding:0 10px;border-radius:13px;border:1px solid var(--line);background:none;color:var(--fg-2);font-size:12px}
+.chip.on{background:var(--fg);color:var(--win);border-color:transparent}
+
+.filterbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding:0 16px 12px}
+.flt{display:grid;gap:3px;min-width:125px;font-size:11px;color:var(--fg-3)}
+.flt select,.flt input{height:30px;max-width:190px;min-width:125px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--fg);padding:0 8px;font:12px var(--font)}
+.searchflt input{min-width:190px}.filtercount{padding:0 16px 9px;color:var(--fg-3);font-size:11px}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line);color:var(--fg-2);font-size:12px}
+.pager-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pager button{height:34px;min-width:34px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:600 12px var(--font)}
+.pager button:disabled{opacity:.35;cursor:not-allowed}.pager button.active{background:var(--surface-2);border-color:var(--line-strong,var(--line));color:var(--navy,var(--fg))}.pager .sizes{display:flex;padding:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:24px;gap:3px}.pager .sizes button{border:0;border-radius:20px;background:transparent;min-width:38px}.pager .sizes button.active{background:var(--surface);box-shadow:0 1px 3px #0002}.pager input{width:58px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);text-align:center;font:13px var(--font)}.pager .go{background:#20395e;color:white;border-color:#20395e}
+
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:12.5px;font-weight:600;color:var(--fg-2);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:top;white-space:nowrap}
+td.wrap,td.mm{white-space:normal;min-width:200px}
+th.n,td.n{text-align:right}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--hover)}
+tbody tr.is-attn td:first-child{box-shadow:inset 3px 0 0 var(--orange)}
+.attn-cell{color:var(--orange);font-size:12.5px;min-width:220px;max-width:300px}
+tbody tr.is-flag td:first-child{box-shadow:inset 3px 0 0 var(--red)}
+tbody tr.is-sel td{background:var(--sel)}
+tfoot td{font-weight:650;border-bottom:0;background:var(--surface-2)}
+tr.grp th{text-align:center;font-size:13px;border-bottom:0;padding-bottom:0}
+td.chk,th.chk{width:34px;padding-right:0}
+td.mm{font-family:var(--mm);line-height:1.8;min-width:340px}
+td .reason{display:block;white-space:normal;font-size:11px;color:var(--orange);margin-top:2px;max-width:220px}
+.rowact{white-space:nowrap;text-align:right;width:1%}
+.ib{width:26px;height:24px;border:1px solid transparent;border-radius:6px;background:none;color:var(--fg-3);display:inline-grid;place-items:center}
+.ib:hover{background:var(--surface-2);border-color:var(--line);color:var(--fg)}
+.ib.v:hover{color:var(--green)}.ib.f:hover{color:var(--red)}
+.ib svg{width:14px;height:14px}
+.pill{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+.pill.warn{background:color-mix(in srgb,var(--orange) 16%,transparent);color:var(--orange)}
+.pill.bad{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red)}
+.pill.mute{background:color-mix(in srgb,var(--fg) 7%,transparent);color:var(--fg-3);font-weight:500}
+.pill.info{background:color-mix(in srgb,var(--blue) 14%,transparent);color:var(--blue)}
+.pill.c{background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c)}
+.bulk{display:flex;align-items:center;gap:8px;margin:0 16px 10px;padding:6px 6px 6px 12px;border-radius:8px;background:var(--sel);font-size:12px;flex-wrap:wrap}
+.bulk b{margin-right:auto}
+.empty{padding:28px 16px;text-align:center;color:var(--fg-3)}
+.empty b{display:block;color:var(--fg);font-size:14px;margin-bottom:2px}
+.search{flex:1;min-width:200px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--surface-2);padding:0 10px}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.grid32{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}
+
+/* team header */
+.team-h{display:flex;gap:16px;align-items:center;margin-bottom:22px;flex-wrap:wrap}
+.t5 th{padding:10px 16px;background:var(--surface-2)}
+.ov-head{margin-bottom:22px}
+.kcards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-bottom:24px}
+.kcard{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px 18px 18px;border-radius:12px;border:1px solid color-mix(in srgb,var(--c) 22%,var(--line));border-top:4px solid var(--c);background:color-mix(in srgb,var(--c) 7%,var(--surface));color:var(--fg);min-width:0}
+.kcard:hover{background:color-mix(in srgb,var(--c) 12%,var(--surface))}
+.kc-l{color:var(--c);font-weight:600;font-size:14px;line-height:1.3}
+.kc-n{font:700 40px/1.1 var(--num);font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:4px 0 2px}
+.kc-t{font-size:13.5px;line-height:1.45;color:var(--fg-2)}
+.kp{display:inline-block;padding:0 7px;border-radius:7px;font-weight:600;font-variant-numeric:tabular-nums}
+.kp.ok{color:var(--green);background:color-mix(in srgb,var(--green) 15%,transparent)}
+.kp.warn{color:var(--yellow);background:color-mix(in srgb,var(--yellow) 18%,transparent)}
+.kp.bad{color:var(--red);background:color-mix(in srgb,var(--red) 13%,transparent)}
+.win.fs .kc-n{font-size:46px}
+@media (max-width:1500px){.kcards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.kcards{grid-template-columns:minmax(0,1fr)}}
+.ov-lead{font:700 26px/1.3 var(--num);letter-spacing:-.015em;margin:0 0 10px;text-wrap:balance}
+.ov-lead b{font-weight:800;font-variant-numeric:tabular-nums}
+.tpanels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.tp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 20px 16px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.tp-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.tp-h h2{display:flex;align-items:center;gap:8px}
+.tp-h h2 .dot{width:10px;height:10px}
+.stchip{flex:none;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:12px;white-space:nowrap}
+.stchip.bad{color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
+.stchip.ok{color:var(--green);background:color-mix(in srgb,var(--green) 13%,transparent)}
+.tp-big{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.tp-big > div{display:flex;flex-direction:column;gap:2px}
+.tp-big b{font:800 44px/1 var(--num);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tp-big span{font-size:14px;color:var(--fg-2)}
+.ch{font-size:12px;font-weight:600;margin-top:4px}
+.ch.bad{color:var(--red)}.ch.good{color:var(--green)}.ch.flat{color:var(--fg-3);font-weight:500}
+.sbar{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--surface-2)}
+.sbar i{display:block;min-width:4px}
+.slegend{list-style:none;margin:-6px 0 0;padding:0;display:grid;gap:0}
+.slegend li{display:grid;grid-template-columns:12px 1fr auto;column-gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2);font-size:13.5px}
+.slegend li:last-child{border-bottom:0}
+.slegend li i{width:10px;height:10px;border-radius:3px}
+.slegend li b{font-variant-numeric:tabular-nums;font-weight:600}
+.slegend li small{grid-column:2/-1;color:var(--fg-3);font-size:12px;margin-top:-2px}
+.tms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:10px;overflow:hidden}
+.tm{background:var(--surface-2);padding:12px 14px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.tm span{font-size:12.5px;color:var(--fg-2)}
+.tm b{font:700 20px/1.2 var(--num);font-variant-numeric:tabular-nums}
+.tm small{font-size:12px;color:var(--fg-3)}
+.tp-iss h4{margin:0 0 6px;font-size:14px;font-weight:600}
+.tp-iss ul{list-style:none;margin:0;padding:0}
+.tp-iss li button{display:flex;justify-content:space-between;gap:12px;width:100%;border:0;background:none;padding:8px 10px;margin:0 -10px;width:calc(100% + 20px);border-radius:7px;font-size:13.5px;text-align:left;color:var(--fg)}
+.tp-iss li button:hover{background:var(--hover)}
+.tp-iss li button b{color:var(--orange);font-variant-numeric:tabular-nums}
+.ok-line{margin:0;color:var(--green);font-size:13.5px}
+.tp-f{margin-top:auto;display:flex;justify-content:flex-end}
+.gloss{margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 16px}
+.gloss summary{cursor:pointer;padding:14px 0;font-weight:600;font-size:14px}
+.gloss dl{grid-template-columns:minmax(0,200px) minmax(0,1fr);margin:0 0 16px;background:none}
+.gloss dt,.gloss dd{font-size:13px;line-height:1.5}
+@media (max-width:1100px){.tpanels{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:600px){.tms{grid-template-columns:minmax(0,1fr)}}
+.eqt tbody tr{cursor:default}
+.eqt td,.eqt th{padding:9px 16px}
+.eqt thead th{position:sticky;top:0;z-index:1}
+.eqt tfoot td{position:sticky;bottom:0}
+.eqv{display:inline-grid;grid-template-columns:64px auto;align-items:center;gap:10px;justify-content:end}
+.eqv i{display:block;height:6px;border-radius:3px;background:color-mix(in srgb,var(--indigo) 55%,transparent);justify-self:end;min-width:3px}
+.eqv b{font-weight:500;min-width:3ch;text-align:right}
+.eq0{color:var(--fg-3)}
+.seg button{font-size:12px}
+.t5 td{padding:14px 16px;vertical-align:middle}
+.t5 tbody tr:last-child td{border-bottom:0}
+.sev{display:inline-flex;align-items:center;gap:7px;font-weight:500;font-size:12.5px}
+.sev::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--s);box-shadow:0 0 0 3px color-mix(in srgb,var(--s) 18%,transparent)}
+.t5-id{display:block;font-weight:600;font-variant-numeric:tabular-nums}
+.t5-sub{display:block;font-size:12px;color:var(--fg-3);margin-top:1px}
+.t5-issue{color:var(--fg-2);max-width:360px}
+.t5-team{display:inline-flex;align-items:center;gap:7px}
+.t5-age{color:var(--fg-2)}
+.t5-act{display:inline-flex;gap:6px}
+.abtn{height:26px;padding:0 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:500;color:var(--fg)}
+.abtn:hover{background:var(--surface-2)}
+.team-h > div:first-child{margin-right:auto;min-width:0;flex:1 1 320px}
+.team-h h1{margin:0;font:700 28px/1.2 var(--num);letter-spacing:-.015em}
+.team-h p{margin:3px 0 0;color:var(--fg-2);max-width:100%}
+.team-h .prog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--fg-2)}
+.team-h .prog b{display:block;color:var(--fg);font:700 15px var(--num)}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.stat{background:var(--surface);padding:16px 18px 15px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stat .sl{font-size:12.5px;color:var(--fg-2);display:flex;align-items:center;gap:7px}
+.stat .adot{width:7px;height:7px;border-radius:50%;background:var(--red);flex:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 18%,transparent)}
+.stat .sv{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.stat .sv b{font:700 30px/1.05 var(--num);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat.alert .sv b{color:var(--red)}
+.delta{font-style:normal;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:9px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.delta.good{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)}
+.delta.bad{color:var(--red);background:color-mix(in srgb,var(--red) 13%,transparent)}
+.delta.flat{color:var(--fg-3);background:color-mix(in srgb,var(--fg) 7%,transparent)}
+.stat .sc{font-size:12px;color:var(--fg-3);border-top:1px solid var(--line-2);padding-top:8px;margin-top:2px}
+.win.fs .stat .sv b{font-size:36px}
+
+/* charts */
+.legend{display:flex;gap:16px;font-size:13px;color:var(--fg-2);padding:0 16px 6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hbars{padding:6px 16px 16px;display:grid;gap:12px}
+.hrow{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:center}
+.hrow > span{text-align:right;color:var(--fg-2);font-size:13px}
+.hset{display:grid;gap:2px}
+.hb{height:7px;border-radius:4px;min-width:2px}
+.hval{font-size:12px;color:var(--fg-3);margin-top:2px}
+.rbars{padding:4px 16px 16px;display:grid;gap:10px}
+.rbar{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr) 72px;gap:10px;align-items:center;font-size:13.5px}
+.rbar .track{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.rbar .track i{display:block;height:100%;border-radius:5px;background:var(--c)}
+.pipe{display:flex;height:30px;border-radius:7px;overflow:hidden;margin:6px 16px 12px;gap:2px}
+.pipe i{display:grid;place-items:center;color:#fff;font:700 12.5px var(--num);min-width:18px}
+.pkeys{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px 12px;padding:0 16px 16px;font-size:13px;color:var(--fg-2)}
+.pkeys i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.cols{display:flex;align-items:flex-end;gap:14px;height:150px;padding:10px 16px 0;position:relative}
+.cols .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;font-size:12.5px;color:var(--fg-2);min-width:0}
+.cols .c i{width:100%;max-width:46px;border-radius:5px 5px 2px 2px;background:var(--c)}
+.cols .c b{font:700 14px var(--num);color:var(--fg)}
+.clabels{display:flex;gap:14px;padding:8px 16px 16px;font-size:12.5px;color:var(--fg-2)}
+.clabels span{flex:1;text-align:center}
+.sla{position:absolute;top:6px;bottom:0;border-left:1.5px dashed var(--red);font-size:12px;font-weight:500;color:var(--red);padding-left:5px}
+.ck{display:inline-block;width:10px;height:10px;border-radius:50%}
+.ck.ok{background:var(--green)}.ck.fail{background:var(--red)}.ck.na{background:transparent;box-shadow:inset 0 0 0 1.5px var(--fg-3)}
+
+/* issues */
+.rank{display:inline-grid;place-items:center;width:24px;height:20px;border-radius:10px;font:700 11px var(--num);background:color-mix(in srgb,var(--orange) 18%,transparent);color:var(--orange)}
+
+/* queue */
+.qteam{margin-bottom:22px}
+.qhead{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.qhead h3{margin-right:auto;display:flex;align-items:center;gap:8px}
+.qlist{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.qitem{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 14px 10px 0;border-bottom:1px solid var(--line-2);cursor:pointer}
+.qitem:last-child{border-bottom:0}
+.qitem:hover{background:var(--hover)}
+.qitem > i{align-self:stretch;background:var(--orange)}
+.qitem .qt{font-weight:500}
+.qitem .qr{font-size:12px;color:var(--fg-2)}
+.allclear{display:flex;gap:14px;align-items:center;padding:18px;border-radius:12px;background:color-mix(in srgb,var(--green) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--green) 30%,transparent)}
+
+/* drawer */
+.drawer{position:absolute;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--win);border-left:1px solid var(--line);box-shadow:-16px 0 40px rgba(0,0,0,.14);display:flex;flex-direction:column;transform:translateX(102%);transition:transform .22s ease;z-index:20}
+.drawer.open{transform:none}
+.dr-h{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:12px;color:var(--fg-2)}
+.dr-h span{margin-right:auto}
+.dr-b{overflow:auto;padding:18px 18px 24px;flex:1}
+.dr-b h2{font:700 19px/1.3 var(--num);margin-bottom:10px}
+.dr-attn{padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--orange) 13%,transparent);color:var(--fg);font-size:12.5px;margin-bottom:14px;border:1px solid color-mix(in srgb,var(--orange) 35%,transparent)}
+dl{display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr);gap:0;margin:0 0 16px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+dt,dd{margin:0;padding:7px 10px;border-bottom:1px solid var(--line-2);font-size:12.5px}
+dt{color:var(--fg-2)}
+dd{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+dd.mm{font-family:var(--mm);line-height:1.8}
+dl > :nth-last-child(-n+2){border-bottom:0}
+label.fl{display:block;font-size:12px;font-weight:600;margin:0 0 6px}
+textarea{width:100%;min-height:76px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:8px 10px;resize:vertical}
+.dr-act{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.hist{font-size:12px;color:var(--fg-3)}
+
+/* sheet / overlay */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(10,12,20,.28);display:flex;justify-content:center;align-items:flex-start;padding:60px 16px 16px}
+.ov[hidden]{display:none!important}
+.sheet{width:min(560px,100%);max-height:calc(100% - 40px);overflow:auto;background:var(--win);border-radius:12px;box-shadow:var(--pop);padding:22px 24px 20px;animation:drop .2s ease}
+@keyframes drop{from{transform:translateY(-14px);opacity:.4}}
+.sheet h2{font:700 18px var(--num);margin-bottom:4px;text-transform:capitalize}
+.sheet .lead{color:var(--fg-2);margin:0 0 16px}
+.sheet .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
+.drop{border:1.5px dashed color-mix(in srgb,var(--fg) 25%,transparent);border-radius:12px;padding:26px;text-align:center;color:var(--fg-2);display:grid;gap:8px;justify-items:center}
+.drop.over{border-color:var(--blue);background:var(--sel)}
+.drop svg{width:34px;height:34px;color:var(--blue)}
+.steps{display:grid;gap:8px;margin:4px 0}
+.step{display:flex;gap:10px;align-items:center;font-size:13px}
+.step i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--surface-2);color:var(--fg-3);font-style:normal;font-size:11px}
+.step.done i{background:var(--green);color:#fff}
+.step.warn i{background:var(--orange);color:#fff}
+.step.bad i{background:var(--red);color:#fff}
+.step.run i{background:var(--blue);color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.step small{margin-left:auto;color:var(--fg-3)}
+.checks{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.checks .step{padding:10px 12px;border-bottom:1px solid var(--line-2);align-items:flex-start}
+.checks .step:last-child{border-bottom:0}
+.checks .step div{flex:1;min-width:0}
+.checks .step div small{display:block;margin:2px 0 0;color:var(--fg-3)}
+.tpl{display:grid;gap:12px;font-size:12px}
+.tpl-card{min-width:0;padding:13px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.tpl-card b{display:block;font-size:13px;margin-bottom:5px}
+.tpl-card .tpl-cols{display:block;color:var(--fg-3);line-height:1.5;overflow-wrap:anywhere;margin-bottom:12px}
+.tpl-actions{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap}
+.tpl-actions .btn{min-height:32px;height:auto;padding:7px 11px;white-space:normal;justify-content:center}
+.tpl-actions .btn.pri{flex:0 0 auto}
+@media(max-width:480px){.tpl-actions{display:grid;grid-template-columns:1fr 1fr}.tpl-actions .btn{width:100%}}
+
+/* upload progress UI */
+.upload-panel{border:1px solid var(--line);border-radius:13px;background:var(--surface);padding:18px;margin-top:14px}
+.upload-file{display:flex;align-items:center;gap:11px;min-width:0}
+.upload-file .uf-icon{width:40px;height:40px;display:grid;place-items:center;flex:none;border-radius:10px;background:var(--sel);color:var(--blue)}
+.upload-file .uf-icon svg{width:21px;height:21px}
+.upload-file .uf-meta{min-width:0;flex:1}
+.upload-file .uf-name{font-weight:650;font-size:13px;overflow-wrap:anywhere;color:var(--fg)}
+.upload-file .uf-size{font-size:11.5px;color:var(--fg-3);margin-top:3px}
+.upload-state{display:flex;align-items:center;gap:9px;margin:17px 0 10px;font-size:13px;font-weight:600;color:var(--fg)}
+.upload-spin{width:17px;height:17px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:uploadspin .75s linear infinite;flex:none}
+@keyframes uploadspin{to{transform:rotate(360deg)}}
+.upload-track{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.upload-fill{height:100%;width:4%;border-radius:99px;background:var(--blue);transition:width .2s ease}
+.upload-percent{display:flex;justify-content:space-between;gap:12px;margin-top:7px;color:var(--fg-3);font-size:11.5px;font-variant-numeric:tabular-nums}
+.upload-steps{display:grid;gap:9px;margin-top:17px}
+.upload-step{display:flex;align-items:center;gap:9px;color:var(--fg-3);font-size:12px}
+.upload-step .us-dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:10px;flex:none}
+.upload-step.active{color:var(--fg);font-weight:600}
+.upload-step.active .us-dot{background:var(--sel);color:var(--blue)}
+.upload-step.done{color:var(--green)}
+.upload-step.done .us-dot{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}
+.upload-result{margin-top:13px;padding:10px 12px;border-radius:9px;font-size:12px;line-height:1.5;background:color-mix(in srgb,var(--green) 10%,var(--surface));color:var(--fg);border:1px solid color-mix(in srgb,var(--green) 28%,transparent)}
+.upload-result.error{background:color-mix(in srgb,var(--red) 9%,var(--surface));border-color:color-mix(in srgb,var(--red) 28%,transparent)}
+.upload-busy .acts button{opacity:.55;pointer-events:none}
+
+/* spotlight */
+.spot{width:min(620px,100%);background:var(--win);border-radius:14px;box-shadow:var(--pop);overflow:hidden;animation:drop .16s ease}
+.spot input{width:100%;border:0;background:none;font-size:20px;padding:16px 18px;outline:none;border-bottom:1px solid var(--line)}
+.spot ul{list-style:none;margin:0;padding:6px;max-height:360px;overflow:auto}
+.spot li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.spot li.on,.spot li:hover{background:var(--sel)}
+.spot li small{margin-left:auto;color:var(--fg-3);font-size:11.5px;text-align:right}
+
+.menu{position:fixed;z-index:60;min-width:200px;background:var(--win);border-radius:9px;box-shadow:var(--pop);padding:5px}
+.menu button{display:flex;width:100%;gap:8px;align-items:center;border:0;background:none;padding:6px 10px;border-radius:5px;text-align:left}
+.menu button:hover{background:var(--blue);color:#fff}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 6px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;z-index:70;background:color-mix(in srgb,var(--fg) 88%,transparent);color:var(--win);padding:9px 16px;border-radius:10px;font-size:13px;transition:.2s;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:1280px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:980px){.grid2,.grid32{grid-template-columns:minmax(0,1fr)}.rings{grid-template-columns:repeat(2,minmax(0,1fr))}.tbtn .lbl{display:none}}
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:last-child:nth-child(odd){grid-column:1/-1}
+  .win{grid-template-columns:minmax(0,1fr)}
+  .side{display:none}
+  .mnav{display:flex}
+  .content{padding:18px 14px 48px}
+  .rings,.kpis{grid-template-columns:minmax(0,1fr)}
+  .hero{padding:18px}
+  .hero h1{font-size:22px}
+  .hrow{grid-template-columns:70px minmax(0,1fr)}
+  .rbar{grid-template-columns:minmax(0,1fr) 60px}.rbar .track{grid-column:1/-1;grid-row:2}
+  #sbBtn{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>.dpill.no-data{opacity:.62;border-style:dashed}.dpill.no-data.on{opacity:1}</style>
+</head>
+<body>
+<div class="win" id="win">
+  <aside class="side" aria-label="Sidebar">
+    <div class="lights"><i aria-hidden="true"></i><i aria-hidden="true"></i><button data-act="fullscreen" title="Enter full screen (⌃⌘F)" aria-label="Enter full screen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h9L4 13zM20 20h-9l9-9z"/></svg></button></div>
+    <button class="sfind" data-act="spot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search<kbd>⌘K</kbd></button>
+    <nav class="snav" id="snav"></nav>
+    <div class="sfoot" id="sfoot"></div>
+  </aside>
+  <div class="main">
+    <div class="bar" id="bar"></div>
+    <div class="days" id="days" role="toolbar" aria-label="Report day"></div>
+    <main class="content" id="content"></main>
+  </div>
+  <aside class="drawer" id="drawer" aria-label="Record inspector"></aside>
+</div>
+<div class="ov" id="ov" hidden></div>
+<div class="menu" id="menu" hidden></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---------- icons ---------- */
+const I = {
+  overview:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
+  attention:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M5.5 6.5 4 13v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5l-1.5-6.5A2 2 0 0 0 16.6 5H7.4a2 2 0 0 0-1.9 1.5z"/></svg>',
+  rma:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a5 5 0 0 0-6.4 6.4L3.8 17.2a2.1 2.1 0 0 0 3 3l4.5-4.5a5 5 0 0 0 6.4-6.4l-3 3-3.1-3.1z"/><path d="m16.8 4.2 3 3"/></svg>',
+  gng:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 7 2 2 3.5-3.5"/><path d="m4 15 2 2 3.5-3.5"/><path d="M13 7.5h7M13 15.5h7"/></svg>',
+  upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  checkdoc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+  tpl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M9 9v11M3.5 14.5h17"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M7 11H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>',
+  flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
+  sidebar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9 4.5v15"/></svg>',
+  left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>',
+  right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
+  auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>',
+  expand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg>',
+  shrink:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  sign:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.5 3.2 8 7.5 9.5 4.3-1.5 7.5-5 7.5-9.5V6z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/></svg>'
+};
+const TEAMS = {
+  rma:{name:'RMA',c:'var(--pink)',desc:'Splicer and OTDR repairs, vendor returns and release'},
+  gng:{name:'GNG',c:'var(--indigo)',desc:'Go / No-Go QC for fiber implementation projects'}
+};
+const TEAM_IDS = Object.keys(TEAMS);
+const VIEWS = {overview:'Overview',...Object.fromEntries(TEAM_IDS.map(t=>[t,TEAMS[t].name]))};
+
+/* ---------- helpers ---------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sum = (a,k)=>a.reduce((s,x)=>s+(+x[k]||0),0);
+const pct = (n,d)=>d?Math.round(n/d*1000)/10:0;
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const toD = k=>new Date(k+'T00:00:00');
+const kOf = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const addDays=(k,n)=>{const d=toD(k);d.setDate(d.getDate()+n);return kOf(d)};
+const dlabel = k=>{const d=toD(k);return `${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`};
+const dshort = k=>{const d=toD(k);return `${d.getDate()} ${MON[d.getMonth()]}`};
+const dlong = k=>`${dshort(k)} ${toD(k).getFullYear()}`;
+const nowT = ()=>{const d=new Date();return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const planCls = p=>p>=90?'ok':p>=70?'warn':'bad';
+
+/* ---------- state ---------- */
+const TODAY_KEY = localUploadDay(new Date().toISOString()); // Dashboard day follows Asia/Yangon, not the computer timezone.
+const INITIAL_DAYS = Array.from({length:7},(_,i)=>addDays(TODAY_KEY,-i));
+const S = {days:INITIAL_DAYS, allDays:INITIAL_DAYS.slice(), day:TODAY_KEY, year:TODAY_KEY.slice(0,4), month:'all',
+  view:'overview', viewAllDays:false, val:{}, signoff:{}, sel:{}, attnOnly:{}, rmaF:'win', gngF:'win', rmaFilters:{}, gngFilters:{}, rmaSearch:'', gngSearch:'', pager:{'rma-cases':{size:20,page:1},'gng-jobs':{size:20,page:1}}, eqGroup:'team', theme:'auto', insp:null, cache:{}, uploads:{}, user:null, _uploadDataset:'rma'};
+try{ const t=localStorage.getItem('odp-theme'); if(t) S.theme=t; if(localStorage.getItem('odp-nosb')==='1') $('#win').classList.add('nosb'); }catch(e){}
+
+/* ---------- sample data (generated per report day; 28 Oct mirrors the sample report) ---------- */
+/* RMA sheet (RMA_for_Portal.xlsx). Dates were normalised on import: day/month swaps were resolved with the Months and Release Months columns.
+   0 sheet row, 1 received, 2 inbound team, 3 sender, 4 sender ID, 5 team manager, 6 device, 7 type, 8 main board S/N, 9 body S/N, 10 status category,
+   11 issue, 12 detail resolution, 13-15 changing resolutions, 16 outbound from Inv RMA, 17 inbound to Inv RMA, 18 user error, 19 adapter, 20 vendor,
+   21 send to procurement, 22 receive from procurement, 23 inbound to Inv Main, 24 outbound by cross team, 25 release date, 26 outbound person,
+   27 outbound ID, 28 detail remark, 29 estimate saved (MMK), 30 current in-hand team, 31 final status */
+const RMA_SLA={team:30,vendor:90};
+function rangeBounds(k){return {from:'0000-01-01',to:k};}
+const dY=v=>`${dshort(v)} ${v.slice(0,4)}`;
+function rangeShort(k){return 'All time'}
+function rangeIn(k){return 'across all time'}
+const rangeKey=()=>'all';
+function applyReportDayRange(){
+  const source=S.allDays.length?S.allDays:INITIAL_DAYS;
+  const years=[...new Set(source.map(k=>k.slice(0,4)))].sort().reverse();
+  if(!years.includes(S.year))S.year=years[0]||TODAY_KEY.slice(0,4);
+  const yearDays=source.filter(k=>k.slice(0,4)===S.year);
+  const months=[...new Set(yearDays.map(k=>k.slice(5,7)))];
+  if(S.month!=='all'&&!months.includes(S.month))S.month='all';
+  const periodDays=yearDays.filter(k=>S.month==='all'||k.slice(5,7)===S.month);
+  if(S.viewAllDays){
+    S.days=periodDays;
+  }else{
+    // Always show seven consecutive calendar dates, including dates with no upload.
+    // With All Months selected, the seven-day window can cross a month boundary.
+    let anchor=periodDays[0];
+    if(!anchor){
+      const mm=Number(S.month==='all'?'12':S.month);
+      anchor=`${S.year}-${String(mm).padStart(2,'0')}-${String(new Date(Number(S.year),mm,0).getDate()).padStart(2,'0')}`;
+    }
+    S.days=Array.from({length:7},(_,i)=>addDays(anchor,-i));
+    if(S.month!=='all')S.days=S.days.filter(k=>k.slice(5,7)===S.month);
+  }
+  if(S.days.length&&!S.days.includes(S.day))S.day=S.days[0];
+}
+const RSTAGE=['In team repair','At vendor','Done, not released','Completed','Failed','Released, no status'];
+const RSTAGE_C=['var(--teal)','var(--indigo)','var(--blue)','var(--green)','var(--red)','var(--fg-3)'];
+const shortIssue=v=>(v||'').replace(/^(Splicer|OTDR)\s*:\s*/i,'');
+let RMA_RAW=[];
+let GNG_RAW=[];
+let RMA_UPLOAD_RAW=[];
+let GNG_UPLOAD_RAW=[];
+const isDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'');
+const dayDiff=(a,b)=>Math.round((toD(b)-toD(a))/864e5);
+function rmaFor(k){
+  // The selected report day is the upload day, not the sheet's
+  // Received Date. Keep exactly the rows uploaded on that day.
+  const all=RMA_RAW.filter(x=>x.uploadDay===k).map(x=>{
+    const [row,recv,inTeam,sender,senderId,manager,device,type,sn,bodySn,statusCat,issue,resolution,ch1,ch2,ch3,outRMA,inRMA,userErr,adapter,vendor,sendProc,recvProc,inMain,outCross,release,outPerson,outId,remark,saved,inhand,final]=x;
+    const released=isDate(release)&&release<=k;
+    const status=String(final||statusCat||'').toLowerCase();
+    let st=0;
+    if(released) st=5;
+    else if(/fail|scrap|unrepair|reject/.test(status)) st=4;
+    else if(/complete|done|repair(ed)?/.test(status)) st=3;
+    else if(/vendor|procurement/.test(String(vendor||'')+' '+String(inhand||''))) st=1;
+    else if(vendor&&!recvProc) st=1;
+    else if(/release/.test(status)) st=2;
+    const age=isDate(recv)?Math.max(0,dayDiff(recv,k)):0, vdays=vendor&&sendProc?dayDiff(sendProc,recvProc&&recvProc<=k?recvProc:k):0;
+    const open=!released&&st!==4;
+    const over=open&&age>RMA_SLA.team;
+    const r={id:'r'+row,row,recv,inTeam,sender,senderId,manager,device,type,sn,bodySn,statusCat,issue,resolution,
+      changes:[ch1,ch2,ch3].filter(Boolean).join('; '),outRMA,inRMA,userErr,adapter,vendor,sendProc,recvProc,inMain,outCross,
+      release:released?release:'',outPerson,outId,remark,saved,inhand,final,st,age,open,over,vdays,visit:1};
+    return r;
+  }).sort((a,b)=>(b.recv||'').localeCompare(a.recv||'')||b.row-a.row);
+  return {all,win:all};
+}
+function rmaNums(D){
+  const all=D.rma.all, w=D.rma.win;
+  const open=all.filter(r=>r.open);
+  const team=open.filter(r=>r.st===0);
+  const vendor=open.filter(r=>r.st===1);
+  const ready=open.filter(r=>r.st===2||r.st===3);
+  const rel=w.filter(r=>r.release);
+  const comp=rel.filter(r=>/complete|done|repair(ed)?/i.test(String(r.final||r.statusCat||'')));
+  const fail=rel.filter(r=>/fail|scrap|unrepair|reject/i.test(String(r.final||r.statusCat||'')));
+  const over=open.filter(r=>r.over);
+  const recvW=w.filter(r=>r.recv>=rangeBounds(D.k).from&&r.recv<=rangeBounds(D.k).to);
+  const durations=comp.map(r=>dayDiff(r.recv,r.release)).filter(n=>n>=0);
+  const avg=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length*10)/10:0;
+  const saved=rel.reduce((n,r)=>n+(Number(String(r.saved||'').replace(/[^0-9.-]/g,''))||0),0)/1000000;
+  const bySn={};
+  all.filter(r=>r.sn).forEach(r=>{const key=String(r.sn).trim().toLowerCase();(bySn[key]||(bySn[key]=[])).push(r)});
+  Object.values(bySn).forEach(rows=>{rows.sort((a,b)=>a.recv.localeCompare(b.recv));rows.forEach((r,i)=>r.visit=i+1)});
+  w.forEach(r=>{
+    const notes=[]; let score=0;
+    if(!r.sn){notes.push('S/N missing');score=Math.max(score,5)}
+    if(r.open&&r.st===0&&r.age>RMA_SLA.team){notes.push(`In team repair for ${r.age} days`);score=Math.max(score,Math.min(14,6+r.age/10))}
+    if(r.open&&r.st===1&&r.vdays>RMA_SLA.vendor){notes.push(`At ${r.vendor||'vendor'} for ${r.vdays} days`);score=Math.max(score,Math.min(14,6+r.vdays/10))}
+    if(r.open&&r.st>=2&&r.age>RMA_SLA.team){notes.push(`not released after ${r.age} days`);score=Math.max(score,7)}
+    if(r.visit>1){notes.push('Repeat repair');score=Math.max(score,8)}
+    if(r.release&&r.release<r.recv){notes.push('Release date is before received date');score=Math.max(score,8)}
+    if(r.release&&!r.final&&!r.statusCat){notes.push('Released without final status');score=Math.max(score,5)}
+    if(!r.statusCat&&!r.final){notes.push('No status recorded');score=Math.max(score,3)}
+    r.attn=notes.join('; ');r.score=score;
+  });
+  return {all,open,team,vendor,ready,over,rel,comp,fail,recvW,avg,saved:Math.round(saved*10)/10};
+}
+
+function gngFor(k){
+  const {from,to}=rangeBounds(k);
+  const seen=d=>isDate(d)&&d<=k?d:(isDate(d)?'':d);   /* dates after the report day have not happened yet */
+  const all=GNG_RAW.filter(x=>x[13]<=k).map(x=>{
+    const [no,project,tsp,team,olt,ca1,ca2,otb,mode,overall,lqc,gqc,nqc,submit,failDate,fixDate,goDate,link,fixLink,remark]=x;
+    const r={id:'g'+no,no,project,tsp,team,olt,ca1,ca2,otb,mode,overall,lqc,gqc,nqc,submit,failDate:seen(failDate),fixDate:seen(fixDate),goRaw:goDate,link,fixLink,remark};
+    r.goDate=isDate(goDate)&&goDate<=k?goDate:'';
+    r.dec=/cancel|no ?go/i.test(remark)?'No-Go':r.goDate?'Go':isDate(goDate)?'Scheduled':'Pending';
+    r.age=dayDiff(submit,k);
+    r.lead=r.goDate?dayDiff(submit,r.goDate):null;
+    r.fails=[['Result',overall],['Logical QC',lqc],['Ground QC',gqc],['NOC QC',nqc]].filter(q=>q[1]==='Fail').map(q=>q[0]);
+    r.inWin=submit>=from&&submit<=to;
+    const a=[]; let sc=0; const add=(t,v)=>{a.push(t);sc=Math.max(sc,v)};
+    if(r.inWin){
+      if(r.dec==='Go'&&r.fails.length) add(`Go given with failed ${r.fails.join(', ')}`,14);
+      if(r.fails.length&&r.dec!=='Go'&&r.dec!=='No-Go'&&!r.fixDate) add(`QC failed (${r.fails.join(', ')}); fix data not submitted`,12);
+      if(r.dec==='Pending'&&r.age>5) add(`No Go/No-Go decision ${r.age} days after submit`,6+Math.min(r.age,40)/10);
+      if(isDate(goDate)&&goDate<submit) add('Go/No-Go date is before the submit date',8);
+      if(lqc==='Inprogress') add('Logical QC still in progress',5);
+      if(!link) add('No data link in the sheet',5);
+    }
+    r.attn=a.join('; '); r.score=sc; return r;
+  }).sort((a,b)=>b.submit.localeCompare(a.submit)||b.no-a.no);
+  return {all,win:all.filter(r=>r.inWin)};
+}
+
+function data(k){
+  const ck=k+'|'+rangeKey(); if(S.cache[ck]) return S.cache[ck];
+  const base = k==='2026-10-28', seed=+k.replace(/-/g,'');
+  const r = mulberry(seed), r2 = mulberry(seed*7+3);
+  const J=(v,a)=>base?v:Math.max(0,v+Math.round((r()-.5)*2*a));
+  const pick=(a,rr=r)=>a[Math.floor(rr()*a.length)];
+  const prev = addDays(k,-1), md=k.slice(5).replace('-','');
+
+  const up = S.uploads[k] || {file:`Operation_Daily_Report (${String(toD(k).getDate()).padStart(2,'0')}-${MON[toD(k).getMonth()]}-${toD(k).getFullYear()}).xlsx`,at:`${k.slice(8)}/${k.slice(5,7)}/${k.slice(0,4)}, ${base?'10:56:15':'10:4'+Math.floor(r()*10)+':0'+Math.floor(r()*10)}`};
+
+  return S.cache[ck] = {k,prev,rma:rmaFor(k),gng:gngFor(k),up};
+}
+
+/* ---------- table definitions: one source for team pages, queue, inspector, search, export ---------- */
+function tables(d){
+  return {
+    rma:[{id:'rma-cases',team:'rma',title:'RMA Repairs',sub:`From the RMA sheet, newest first. Open repairs plus anything received or released ${rangeIn(d.k)}. SLA: ${RMA_SLA.team} days in team repair, ${RMA_SLA.vendor} days at the vendor.`,
+      rows:d.rma.win, statRows:d.rma.win, name:r=>`${r.device} · ${r.sn||'no S/N'}`,
+      filter:r=>S.rmaF==='open'?r.open:S.rmaF==='over'?r.over:S.rmaF==='vendor'?r.st===1:true,cols:[
+      {k:'recv',l:'Received',fmt:r=>gdate(r.recv,d.k)},{k:'inTeam',l:'From team'},{k:'sender',l:'Sender'},
+      {k:'device',l:'Device'},{k:'sn',l:'Main board S/N',fmt:r=>r.sn?esc(r.sn):'<span class="pill bad">Missing</span>'},
+      {k:'issue',l:'Issue',w:1,fmt:r=>esc(shortIssue(r.issue))},
+      {k:'stage',l:'Stage',get:r=>RSTAGE[r.st],fmt:r=>`<span class="pill c" style="--c:${RSTAGE_C[r.st]}">${RSTAGE[r.st]}</span>`},
+      {k:'vendor',l:'Vendor',fmt:r=>esc(r.vendor||'—')},
+      {k:'age',l:'Days',n:1,fmt:r=>r.open?`<span class="pill ${r.over?'bad':r.age>14?'warn':'mute'}">${r.age}</span>`:r.age},
+      {k:'release',l:'Released',fmt:r=>r.release?gdate(r.release,d.k):'—'},
+      {k:'visit',l:'Visits',n:1,fmt:r=>r.visit>1?`<span class="pill warn">${r.visit}</span>`:r.visit},
+      {k:'row',l:'Sheet row',n:1,x:1},{k:'type',l:'Device type',x:1},{k:'senderId',l:'Sender ID',x:1},{k:'manager',l:'Team manager',x:1},{k:'bodySn',l:'Body S/N',x:1},
+      {k:'statusCat',l:'Status category',x:1},{k:'final',l:'Final status',x:1},{k:'resolution',l:'Detail resolution',x:1},{k:'changes',l:'Parts changed',x:1},
+      {k:'vdays',l:'Days at vendor',x:1,get:r=>r.vdays??''},{k:'sendProc',l:'Sent to procurement',x:1,fmt:r=>r.sendProc?gdate(r.sendProc,d.k):'—'},{k:'recvProc',l:'Back from procurement',x:1,fmt:r=>r.recvProc?gdate(r.recvProc,d.k):'—'},
+      {k:'outRMA',l:'Outbound from Inv RMA',x:1},{k:'inRMA',l:'Inbound to Inv RMA',x:1},{k:'inMain',l:'Inbound to Inv Main',x:1},{k:'outCross',l:'Outbound by cross team',x:1},
+      {k:'userErr',l:'User error',x:1},{k:'adapter',l:'Adapter',x:1},{k:'outPerson',l:'Outbound person',x:1},{k:'outId',l:'Outbound ID',x:1},{k:'inhand',l:'Current in-hand team',x:1},
+      {k:'saved',l:'Estimated saving (MMK)',x:1,get:r=>r.saved||'',fmt:r=>r.saved?Number(r.saved).toLocaleString('en-US'):'—'},
+      {k:'remark',l:'Detail remark',x:1,mm:1,fmt:r=>esc(r.remark||'—')}]}],
+    gng:[{id:'gng-jobs',team:'gng',title:'Go / No-Go projects',sub:`From the Go No Go sheet, newest first. Rows are marked when a decision, QC result or date needs a check (projects submitted ${rangeIn(d.k)}).`,
+      rows:d.gng.win, statRows:d.gng.win, filter:r=>S.gngF!=='wait'||r.dec==='Pending'||r.dec==='Scheduled', name:r=>r.project,cols:[
+      {k:'no',l:'No',n:1},{k:'project',l:'Project',w:1},{k:'tsp',l:'TSP',fmt:r=>r.tsp||'<span class="pill mute">None</span>'},{k:'team',l:'Team'},
+      {k:'scope',l:'Scope',get:r=>[['OLT',r.olt],['CA1',r.ca1],['CA2',r.ca2],['OTB',r.otb]].filter(q=>q[1]).map(q=>q[0]+' '+q[1]).join(' · ')||'—'},
+      {k:'mode',l:'Mode'},
+      ...[['overall','Result'],['lqc','Logical QC'],['gqc','Ground QC'],['nqc','NOC QC']].map(([k,l])=>({k,l,fmt:r=>qcPill(r[k])})),
+      {k:'submit',l:'Submitted',get:r=>r.submit,fmt:r=>gdate(r.submit,d.k)},
+      {k:'goDate',l:'Go / No-Go',get:r=>r.goDate||r.goRaw,fmt:r=>r.goDate?gdate(r.goDate,d.k):r.dec==='Scheduled'?`<span class="pill info">${gdate(r.goRaw,d.k)}</span>`:esc(r.goRaw||'—')},
+      {k:'days',l:'Days',n:1,x:1,get:r=>r.lead??r.age,fmt:r=>r.lead!=null?r.lead:`<span class="pill ${r.age>5?'warn':'mute'}">${r.age}</span>`},
+      {k:'dec',l:'Decision',fmt:r=>`<span class="pill ${r.dec==='Go'?'ok':r.dec==='No-Go'?'bad':r.dec==='Scheduled'?'info':'warn'}">${r.dec}</span>`},
+      {k:'olt',l:'OLT',n:1,x:1},{k:'ca1',l:'CA1',n:1,x:1},{k:'ca2',l:'CA2',n:1,x:1},{k:'otb',l:'OTB',n:1,x:1},
+      {k:'failDate',l:'QC fail data submitted',x:1,fmt:r=>r.failDate?gdate(r.failDate,d.k):'—'},{k:'fixDate',l:'Fix data submitted',x:1,fmt:r=>r.fixDate?gdate(r.fixDate,d.k):'—'},
+      {k:'link',l:'Data link',x:1,fmt:r=>linkOf(r.link)},{k:'fixLink',l:'After-fix link',x:1,fmt:r=>linkOf(r.fixLink)},
+      {k:'remark',l:'STRM remark',x:1,fmt:r=>esc(r.remark||'—')}]}]
+  };
+}
+const allTables = d=>Object.values(tables(d)).flat();
+const qcPill=v=>v==='Pass'?'<span class="pill ok">Pass</span>':v==='Fail'?'<span class="pill bad">Fail</span>':v==='Inprogress'?'<span class="pill warn">In progress</span>':'<span class="pill mute">—</span>';
+const gdate=(v,k)=>!isDate(v)?esc(v||'—'):v.slice(0,4)===k.slice(0,4)?dshort(v):`${dshort(v)} ${v.slice(2,4)}`;
+const linkOf=v=>!v?'—':/^https?:\/\//.test(v)?`<a href="${esc(v)}" target="_blank" rel="noopener">Open folder</a>`:esc(v);
+const findTable = (d,id)=>allTables(d).find(t=>t.id===id);
+
+/* ---------- validation ---------- */
+const vk=(team,id)=>`${S.day}|${team}|${id}`;
+const vget=(team,id)=>S.val[vk(team,id)];
+function vset(team,id,s,note){ if(!s){delete S.val[vk(team,id)];return} S.val[vk(team,id)]={s,note:note??vget(team,id)?.note??'',at:nowT()} }
+const ISSUE_CATS=[[/^In team repair/,'Late with the RMA team'],[/^At .* for \d+ days/,'Late at the vendor'],[/^Back \d+ days/,'Came back within 90 days of a repair'],[/not released after/,'Repaired but not returned after 30 days'],
+  [/S\/N missing/,'Main board S/N missing'],[/^Repair failed/,'Repair failed'],[/^Released without/,'Returned with no final status'],[/^No status/,'No status recorded'],[/^Release date is before/,'Return date is before received date'],
+  [/^Go given with failed/,'Go given with failed QC'],[/^QC failed/,'QC failed, no fix data sent'],[/^No Go\/No-Go decision/,'No Go/No-Go decision after 5 days'],[/^Go\/No-Go date is before/,'Go date is before submit date'],[/^Logical QC still/,'Logical QC in progress'],[/^No data link/,'No data link']];
+function issueCats(rows){const m={};rows.forEach(r=>r.attn.split('; ').forEach(a=>{const c=(ISSUE_CATS.find(([re])=>re.test(a))||[0,a])[1];m[c]=(m[c]||0)+1}));return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function teamStats(d,team){
+  const rows=tables(d)[team].flatMap(t=>t.statRows||t.rows);
+  const open=rows.filter(r=>r.attn);
+  const done=rows.filter(r=>vget(team,r.id)).length;
+  return {total:rows.length,open,done,flag:rows.filter(r=>vget(team,r.id)?.s==='flag').length,p:rows.length?done/rows.length:0};
+}
+const signKey=t=>`${S.day}|${t}`;
+
+/* ---------- small renderers ---------- */
+function ring(p,c,size=64,w=7){const r=(size-w)/2,C=2*Math.PI*r,len=Math.max(0,Math.min(1,p))*C;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" style="stroke:color-mix(in srgb,${c} 18%,transparent)" stroke-width="${w}"/>${len>0?`<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" style="stroke:${c}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${len} ${C}" transform="rotate(-90 ${size/2} ${size/2})"/>`:''}</svg>`}
+function spark(vals,c,cur){const w=92,h=30,mx=Math.max(...vals),mn=Math.min(...vals),rg=(mx-mn)||1;
+  const pts=vals.map((v,i)=>[vals.length>1?i/(vals.length-1)*(w-6)+3:w/2,h-4-(v-mn)/rg*(h-8)]);
+  const ci=cur??pts.length-1;
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" style="stroke:${c}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/><circle cx="${pts[ci][0]}" cy="${pts[ci][1]}" r="3" style="fill:${c}"/></svg>`}
+function filterSelect(team,key,label,rows){
+  const vals=[...new Set(rows.map(r=>String(r[key]??'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const state=team==='rma'?S.rmaFilters:S.gngFilters, val=state[key]||'';
+  return `<label class="flt"><span>${label}</span><select data-filter-team="${team}" data-filter-key="${key}"><option value="">All ${label}</option>${vals.map(v=>`<option value="${esc(v)}" ${val===v?'selected':''}>${esc(v)}</option>`).join('')}</select></label>`;
+}
+function filterTools(team,rows){
+  const r=team==='rma', state=r?S.rmaFilters:S.gngFilters, search=r?S.rmaSearch:S.gngSearch;
+  const stageOptions=[['open','In repair (all open)'],...RSTAGE.map((v,i)=>[String(i),v])];
+  const stageValue=state.stage||'';
+  const stageSelect=`<label class="flt"><span>Stage</span><select data-filter-team="rma" data-filter-key="stage"><option value="">All stages</option>${stageOptions.map(([v,l])=>`<option value="${v}" ${stageValue===v?'selected':''}>${l}</option>`).join('')}</select></label>`;
+  const controls=r?[
+    filterSelect(team,'device','Device',rows),stageSelect,filterSelect(team,'vendor','Vendor',rows),filterSelect(team,'inhand','In-hand team',rows)
+  ].join(''):[
+    filterSelect(team,'team','Team',rows),filterSelect(team,'tsp','TSP',rows),filterSelect(team,'mode','GNG Mode',rows),filterSelect(team,'dec','Decision',rows),filterSelect(team,'overall','Result',rows),filterSelect(team,'lqc','Logical QC',rows),filterSelect(team,'gqc','Ground QC',rows),filterSelect(team,'nqc','NOC QC',rows)
+  ].join('');
+  const active=Object.values(state).some(Boolean)||!!search;
+  return `<div class="filterbar"><label class="flt searchflt"><span>Search</span><input type="search" data-filter-search="${team}" placeholder="Search ${r?'RMA repairs':'GNG projects'}..." value="${esc(search)}"></label>${controls}<button class="chip" data-act="clearfilters" data-team="${team}" ${active?'':'disabled'}>Clear filters</button></div>`;
+}
+function tableHTML(t,extraTools=''){
+  let rows=t.filter?t.rows.filter(t.filter):t.rows;
+  const team=t.team, filters=team==='rma'?S.rmaFilters:team==='gng'?S.gngFilters:null, search=team==='rma'?S.rmaSearch:team==='gng'?S.gngSearch:'';
+  if(filters) rows=rows.filter(r=>Object.entries(filters).every(([k,v])=>{if(!v)return true;if(k==='stage')return v==='open'?r.open:String(r.st)===v;return String(r[k]??'')===v;}));
+  if(search) rows=rows.filter(r=>Object.values(r).some(v=>String(v??'').toLowerCase().includes(search.toLowerCase())));
+  const filteredCount=rows.length;
+  const nOpen=t.rows.filter(r=>r.attn).length;
+  if(S.attnOnly[t.id]) rows=rows.filter(r=>r.attn);
+  const pager=S.pager[t.id]||(S.pager[t.id]={size:9,page:1}), totalPages=Math.max(1,Math.ceil(rows.length/pager.size));
+  pager.page=Math.min(Math.max(1,pager.page),totalPages);
+  const pageRows=rows.slice((pager.page-1)*pager.size,pager.page*pager.size);
+  const pagerHTML=(team==='rma'||team==='gng')?`<div class="pager"><div class="pager-group"><span>Show</span><div class="sizes">${[20,40,60].map(n=>`<button class="${pager.size===n?'active':''}" data-act="pagesize" data-t="${t.id}" data-size="${n}" aria-pressed="${pager.size===n}">${n}</button>`).join('')}</div></div><div class="pager-group"><button data-act="page" data-t="${t.id}" data-page="${pager.page-1}" ${pager.page<=1?'disabled':''} aria-label="Previous page">‹</button><span>Page <b>${pager.page}</b> of <b>${totalPages}</b></span><button data-act="page" data-t="${t.id}" data-page="${pager.page+1}" ${pager.page>=totalPages?'disabled':''} aria-label="Next page">›</button></div><div class="pager-group"><label for="go-${t.id}">Go to page</label><input id="go-${t.id}" type="number" min="1" max="${totalPages}" value="${pager.page}" data-page-input="${t.id}"><button class="go" data-act="pagego" data-t="${t.id}">Go</button></div></div>`:'';
+  const vc=t.cols.filter(c=>!c.x), cell=(c,r)=>c.fmt?c.fmt(r):esc(c.get?c.get(r):r[c.k]);
+  return `<div class="panel" id="p-${t.id}">
+   <div class="ph"><div><h3>${t.title}</h3><p class="sub">${t.sub}</p></div>
+    <div class="tools">${extraTools}
+     <button class="toggle ${S.attnOnly[t.id]?'on':''}" data-act="attnonly" data-t="${t.id}" aria-pressed="${!!S.attnOnly[t.id]}">Needs attention · ${nOpen}</button>
+     <button class="btn" data-act="export" data-t="${t.id}">${I.share}Export</button></div></div>
+   ${team==='rma'||team==='gng'?filterTools(team,t.rows):''}
+   ${team==='rma'||team==='gng'?`<div class="filtercount">Showing ${filteredCount} of ${t.rows.length} records</div>`:''}
+   ${pageRows.length?`<div class="tscroll"><table>
+    ${t.groups?`<thead><tr class="grp">${t.groups.map(([l,s,c])=>`<th colspan="${s}" style="color:${c||'inherit'}">${l}</th>`).join('')}<th></th></tr></thead>`:''}
+    <thead><tr>${vc.map(c=>`<th class="${c.n?'n':''}">${c.l}</th>`).join('')}<th>Needs attention</th></tr></thead>
+    <tbody>${pageRows.map(r=>`<tr data-act="open" data-t="${t.id}" data-id="${r.id}" class="${r.attn?'is-attn':''}">
+      ${vc.map(c=>`<td class="${c.n?'n':''} ${c.mm?'mm':''} ${c.w?'wrap':''}">${cell(c,r)}</td>`).join('')}
+      <td class="wrap attn-cell">${r.attn?esc(r.attn):'<span class="eq0">—</span>'}</td></tr>`).join('')}</tbody>
+    ${t.total?`<tfoot><tr>${vc.map(c=>`<td class="${c.n?'n':''}">${t.total[c.k]??''}</td>`).join('')}<td></td></tr></tfoot>`:''}
+   </table></div>`:`<div class="empty"><b>${S.attnOnly[t.id]?'Nothing here needs attention':'No rows match'}</b>${S.attnOnly[t.id]?`Turn off “Needs attention” to see all ${t.rows.length} rows.`:'Try another filter or clear the search.'}</div>`}${pagerHTML}
+  </div>`;
+}
+
+function teamHeader(d,team,sentence){
+  const T=TEAMS[team], st=teamStats(d,team), so=S.signoff[signKey(team)];
+  return `<header class="team-h" style="--c:${T.c}">
+   <div><h1>${T.name}</h1><p>${sentence}</p></div>
+   <div class="prog"><div><b>${st.open.length} of ${st.total}</b>rows need attention</div></div>
+  </header>`;
+}
+/* stat strip: value, change vs the previous report day, and one line of context.
+   dir: -1 = higher is worse, 1 = higher is better, 0 = neutral. alert(v) marks a value that needs action. */
+function statStrip(d,defs){
+  const i=S.days.indexOf(d.k), pk=S.days[i+1], pd=pk?data(pk):null;
+  return `<div class="stats">${defs.map(x=>{const v=x.f(d), dv=pd?v-x.f(pd):null, al=x.alert&&x.alert(v);
+    const tone=dv===null||dv===0||!x.dir?'flat':(dv>0)===(x.dir>0)?'good':'bad';
+    const sub=typeof x.s==='function'?x.s(v,d):x.s;
+    return `<div class="stat ${al?'alert':''}"><span class="sl">${al?'<i class="adot" aria-hidden="true"></i>':''}${x.l}</span>
+      <span class="sv"><b>${x.fmt?x.fmt(v):v}</b>${dv===null?'':`<em class="delta ${tone}" title="Change since ${dlabel(pk)}">${Math.abs(dv)<.05?'No change':(dv>0?'+':'−')+(Math.round(Math.abs(dv)*10)/10)+(x.unit||'')+' vs '+dshort(pk)}</em>`}</span>
+      <span class="sc">${sub}</span></div>`}).join('')}</div>`;
+}
+
+/* ---------- views ---------- */
+function kcards(d,R,g){
+  const P=(v,cls)=>`<span class="kp ${cls}">${v}</span>`;
+  const rate=(n,t)=>t?Math.round(n/t*1000)/10:0;
+  const lateP=rate(R.over.length,R.open.length), fixP=rate(R.comp.length,R.rel.length);
+  const vend={};R.vendor.forEach(r=>{const v=r.vendor||'Unknown';vend[v]=(vend[v]||0)+1});
+  const longest=R.vendor.length?Math.max(...R.vendor.map(r=>r.vdays)):0;
+  const goN=g.w.filter(r=>r.dec==='Go').length, goP=rate(goN,g.w.length);
+  const pend=g.w.filter(r=>r.dec==='Pending').length, sched=g.w.filter(r=>r.dec==='Scheduled').length;
+  const gq=g.w.filter(r=>r.gqc==='Pass'||r.gqc==='Fail'), gqP=rate(gq.filter(r=>r.gqc==='Pass').length,gq.length);
+  const tone=(v,good,ok)=>v>=good?'ok':v>=ok?'warn':'bad', toneLow=(v,good,ok)=>v<=good?'ok':v<=ok?'warn':'bad';
+  const c=(team,col,label,big,lines)=>`<button class="kcard" data-act="nav" data-v="${team}" style="--c:${col}"><span class="kc-l">${label}</span><span class="kc-n">${big}</span>${lines.map(l=>`<span class="kc-t">${l}</span>`).join('')}</button>`;
+  return `<section class="kcards" aria-label="Key numbers">
+    ${c('rma','var(--pink)','Tools in repair',R.open.length,[`${P(lateP+'%',toneLow(lateP,10,30))} late (${R.over.length} past SLA)`,`${R.team.length} RMA team · ${R.vendor.length} vendor · ${R.ready.length} not returned`])}
+    ${c('rma','var(--teal)',`Tools returned · ${rangeShort(d.k)}`,R.rel.length,[`${P(fixP+'%',tone(fixP,95,85))} fixed (${R.comp.length} of ${R.rel.length})`,`${R.fail.length} could not be fixed · avg ${R.avg} days`])}
+    ${c('rma','var(--indigo)','At the vendor',R.vendor.length,[R.vendor.length?`Longest ${P(longest+' days',toneLow(longest,30,90))}`:'Nothing at a vendor',Object.entries(vend).map(([v,n])=>`${esc(v)} ${n}`).join(' · ')||'&nbsp;'])}
+    ${c('gng','var(--purple)',`GNG submissions · ${rangeShort(d.k)}`,g.w.length,[`${P(goP+'%',tone(goP,85,70))} given Go (${goN})`,`${g.week.length} submitted in the last 7 days`])}
+    ${c('gng','var(--orange)','Waiting for Go/No-Go',pend+sched,[`${P(g.wait5.length+' over 5 days',g.wait5.length?'bad':'ok')}`,`${pend} no date yet · ${sched} Go date booked`])}
+    ${c('gng','var(--blue)','Logical QC pass rate',g.lqcRate+'%',[`${P(g.lqcPass+' of '+g.lqcN,tone(g.lqcRate,95,85))} projects passed`,`Ground QC ${gqP}% · ${g.goFail.length} Go with a failed QC`])}
+  </section>`;
+}
+function localUploadDay(timestamp){
+  if(!timestamp) return '';
+  const date=new Date(timestamp);
+  if(Number.isNaN(date.getTime())) return '';
+  const p=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Yangon',
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  }).formatToParts(date);
+  const values=Object.fromEntries(p.map(x=>[x.type,x.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+function uploadRowsForDay(rows,day){
+  // Use the same upload-day rule as the RMA Repairs table.
+  return rows.filter(row=>localUploadDay(row.created_at)===day).length;
+}
+
+function vOverview(d){
+  const R=rmaNums(d), g=gngNums(d), rs=teamStats(d,'rma'), gs=teamStats(d,'gng');
+const rmaUploads=uploadRowsForDay(RMA_UPLOAD_RAW,d.k);
+  const hist=[...S.days].reverse(), ci=hist.indexOf(d.k), H=fn=>hist.map(k=>fn(data(k)));
+  const top=allTables(d).flatMap(t=>t.rows.filter(r=>r.attn).map(r=>({t,r,score:r.score}))).sort((a,b)=>b.score-a.score);
+  const openAll=top.length; if(!S.topAll) top.length=Math.min(5,top.length);
+  const pk=S.days[S.days.indexOf(d.k)+1], pd=pk?data(pk):null;
+  const chg=(v,pv,worseUp)=>{if(pv==null)return'';const dv=Math.round((v-pv)*10)/10;if(!dv)return`<span class="ch flat">Same as ${dshort(pk)}</span>`;return`<span class="ch ${(dv>0)===worseUp?'bad':'good'}">${dv>0?'Up':'Down'} ${Math.abs(dv)} since ${dshort(pk)}</span>`};
+  const bar=segs=>{const tot=segs.reduce((s,x)=>s+x.n,0)||1;return`<div class="sbar" role="img" aria-label="${segs.map(x=>`${x.l}: ${x.n}`).join(', ')}">${segs.filter(x=>x.n).map(x=>`<i style="flex:${x.n};background:${x.c}" title="${x.l}: ${x.n}"></i>`).join('')}</div>
+    <ul class="slegend">${segs.map(x=>`<li><i style="background:${x.c}"></i><span>${x.l}</span><b>${x.n}</b>${x.h?`<small>${x.h}</small>`:''}</li>`).join('')}</ul>`};
+  const metric=(l,v,note)=>`<div class="tm"><span>${l}</span><b>${v}</b>${note?`<small>${note}</small>`:''}</div>`;
+  const issues=(t,st)=>{const cats=issueCats(st.open);return cats.length?`<div class="tp-iss"><h4>What needs attention</h4><ul>${cats.slice(0,5).map(([l,n])=>`<li><button data-act="navattn" data-v="${t}"><span>${esc(l)}</span><b>${n}</b></button></li>`).join('')}</ul></div>`:`<div class="tp-iss"><h4>What needs attention</h4><p class="ok-line">Nothing needs attention ${rangeIn(d.k)}.</p></div>`};
+  const status=n=>n?`<span class="stchip bad">${n} need${n===1?'s':''} attention</span>`:'<span class="stchip ok">All clear</span>';
+  const teamLate=R.team.filter(r=>r.over).length, vendLate=R.vendor.filter(r=>r.over).length;
+  const goClean=g.w.filter(r=>r.dec==='Go'&&!r.fails.length).length, sched=g.w.filter(r=>r.dec==='Scheduled').length, pend=g.w.filter(r=>r.dec==='Pending').length, nogo=g.w.filter(r=>r.dec==='No-Go').length;
+  const totalAttn=rs.open.length+gs.open.length;
+  return `
+  <header class="hero">
+    <h1 class="ov-lead">${totalAttn?`<b>${totalAttn}</b> item${totalAttn===1?' needs':'s need'} attention: <b>${rs.open.length}</b> in RMA and <b>${gs.open.length}</b> in GNG.`:'Nothing needs attention in this report.'}</h1>
+    <p class="summary">RMA has <b>${R.open.length}</b> tool${R.open.length===1?'':'s'} in repair: <b>${R.over.length}</b> past SLA and <b>${R.vendor.length}</b> at the vendor. GNG has <b>${g.wait.length}</b> project${g.wait.length===1?'':'s'} waiting for a Go/No-Go decision, and <b>${g.goFail.length}</b> went ahead with a failed QC ${rangeIn(d.k)}.</p>
+    <p class="meta">Last upload: ${esc(d.up.file)} → ${dlong(d.k)}, ${d.up.at}. Use Date range above to view older report days.</p>
+  </header>
+
+  ${kcards(d,R,g)}
+
+  <section class="tpanels">
+    <article class="tp" style="--c:${TEAMS.rma.c}">
+      <div class="tp-h"><div><h2><i class="dot"></i>RMA</h2><p class="sub">${TEAMS.rma.desc}</p></div>${status(rs.open.length)}</div>
+      <div class="tp-big"><div><b>${rmaUploads.toLocaleString()}</b><span>RMA rows uploaded on ${d.k}</span>${chg(rmaUploads,pk?uploadRowsForDay(RMA_UPLOAD_RAW,pk):null,false)}</div>${spark(H(D=>uploadRowsForDay(RMA_UPLOAD_RAW,D.k)),TEAMS.rma.c,ci)}</div>
+      ${bar([{l:'With the RMA team, on time',n:R.team.length-teamLate,c:'var(--teal)'},{l:'With the RMA team, late',n:teamLate,c:'var(--red)',h:`over ${RMA_SLA.team} days`},{l:'At the vendor',n:R.vendor.length-vendLate,c:'var(--indigo)'},{l:'At the vendor, late',n:vendLate,c:'color-mix(in srgb,var(--red) 60%,var(--indigo))',h:`over ${RMA_SLA.vendor} days`},{l:'Repaired, not yet returned',n:R.ready.length,c:'var(--blue)'}])}
+      <div class="tms">${metric(`Returned · ${rangeShort(d.k)}`,R.rel.length,`${R.comp.length} fixed · ${R.fail.length} could not be fixed`)}${metric('Average repair time',`${R.avg} days`,'From received to returned')}${metric('Estimated saving',`${R.saved}M MMK`,`Repairs returned ${rangeIn(d.k)}`)}</div>
+      ${issues('rma',rs)}
+      <div class="tp-f"><button class="btn" data-act="nav" data-v="rma">Open RMA</button></div>
+    </article>
+    <article class="tp" style="--c:${TEAMS.gng.c}">
+      <div class="tp-h"><div><h2><i class="dot"></i>GNG</h2><p class="sub">${TEAMS.gng.desc}</p></div>${status(gs.open.length)}</div>
+      <div class="tp-big"><div><b>${g.w.length}</b><span>projects submitted ${rangeIn(d.k)}</span>${chg(g.w.length,pd?gngNums(pd).w.length:null,false)}</div>${spark(H(D=>gngNums(D).w.length),TEAMS.gng.c,ci)}</div>
+      ${bar([{l:'Go, all QC passed',n:goClean,c:'var(--green)'},{l:'Go, but a QC failed',n:g.goFail.length,c:'var(--red)'},{l:'Go date booked',n:sched,c:'var(--blue)'},{l:'Waiting for a decision',n:pend,c:'var(--orange)',h:g.wait5.length?`${g.wait5.length} over 5 days`:''},{l:'No-Go',n:nogo,c:'var(--fg-3)'}])}
+      <div class="tms">${metric('Logical QC pass rate',`${g.lqcRate}%`,`${g.lqcPass} of ${g.lqcN} projects passed`)}${metric('Average days to Go',`${g.lead} days`,'From submitted to Go')}${metric('QC failed',g.failed.length,`${g.fixed.length} ${g.fixed.length===1?'has':'have'} sent fix data`)}</div>
+      ${issues('gng',gs)}
+      <div class="tp-f"><button class="btn" data-act="nav" data-v="gng">Open GNG</button></div>
+    </article>
+  </section>
+
+  <section>
+    <div class="sec-h"><div><h2>Fix these first</h2><p class="sub">${S.topAll?`All ${openAll} rows that need attention, highest risk first.`:`The ${top.length} highest-risk of ${openAll} rows that need attention.`} GNG projects that went ahead with a failed QC rank first, then the longest-running RMA repairs.</p></div>${openAll>5?`<button class="link" data-act="topall">${S.topAll?'Show top 5':`Show all ${openAll}`}</button>`:''}</div>
+    ${top.length?`<div class="panel"><div class="tscroll"><table class="t5"><thead><tr><th>Priority</th><th>Item</th><th>Issue</th><th>Team</th><th class="n">Age</th></tr></thead><tbody>
+    ${top.map(({t,r,score})=>{const sev=score>=9?['High','var(--red)']:score>=6?['Medium','var(--orange)']:['Low','var(--yellow)'];
+      const id=t.team==='rma'?r.device:r.project, sub=t.team==='rma'?`S/N ${r.sn||'missing'} · ${r.inTeam||'No team'} · sheet row ${r.row}`:`No ${r.no} · ${r.tsp||'No TSP'} · ${r.team}`;
+      return `<tr data-act="open" data-t="${t.id}" data-id="${r.id}">
+       <td><span class="sev" style="--s:${sev[1]}">${sev[0]}</span></td>
+       <td><span class="t5-id">${esc(id)}</span><span class="t5-sub">${esc(sub)}</span></td>
+       <td class="wrap t5-issue">${esc(r.attn)}</td>
+       <td><span class="t5-team"><i class="dot" style="--c:${TEAMS[t.team].c}"></i>${TEAMS[t.team].name}</span></td>
+       <td class="n t5-age">${r.age} day${r.age===1?'':'s'}</td></tr>`}).join('')}
+    </tbody></table></div></div>`:`<div class="allclear"><span class="signed" style="width:28px;height:28px">${I.sign}</span><div><b>No issues found</b><br><span class="sub">Nothing in this report needs attention.</span></div></div>`}
+  </section>
+
+  <details class="gloss"><summary>What the terms mean</summary>
+    <dl>
+      <dt>RMA</dt><dd>Splicers and OTDRs that teams send in for repair. The RMA team repairs them or sends them to a vendor, then returns them.</dd>
+      <dt>Late</dt><dd>A tool that has been with the RMA team for more than ${RMA_SLA.team} days, or at the vendor for more than ${RMA_SLA.vendor} days.</dd>
+      <dt>Repeat repair</dt><dd>The same main board S/N came back within 90 days of its last repair.</dd>
+      <dt>GNG</dt><dd>Go / No-Go: the QC check a fiber project passes before it goes live.</dd>
+      <dt>Logical, Ground and NOC QC</dt><dd>The three QC checks in the Go No Go sheet. Pass rate counts only projects with a recorded result.</dd>
+      <dt>Go date booked</dt><dd>The sheet has a Go / No-Go date that is after the report day.</dd>
+      <dt>Report day</dt><dd>The day the numbers are worked out for. Choose it in the bar at the top.</dd>
+      <dt>Date range</dt><dd>Choose All time or a custom date range for the records included. Open repairs are always counted.</dd>
+    </dl>
+  </details>`;
+}
+
+function vRma(d){
+  const R=rmaNums(d), w=d.rma.win;
+  const counts=RSTAGE.map((s,i)=>w.filter(r=>r.st===i).length);
+  const buckets=[['0–7',0,7],['8–14',8,14],['15–30',15,30],['31–60',31,60],['61–90',61,90],['90+',91,1e5]].map(([l,a,b])=>({l,n:R.open.filter(x=>x.age>=a&&x.age<=b).length,late:a>RMA_SLA.team}));
+  const bm=Math.max(1,...buckets.map(b=>b.n));
+  const tally=(arr,key)=>{const m={};arr.forEach(r=>{const v=key(r)||'Not recorded';m[v]=(m[v]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,6)};
+  const issues=tally(R.recvW,r=>shortIssue(r.issue)), teams=tally(R.recvW,r=>r.inTeam), im=Math.max(1,...issues.map(x=>x[1])), tm=Math.max(1,...teams.map(x=>x[1]));
+  return teamHeader(d,'rma',`${R.open.length} tools are in repair: ${R.team.length} with the RMA team, ${R.vendor.length} at the vendor and ${R.ready.length} done but not released. ${R.over.length} ${R.over.length===1?'is':'are'} past SLA.`)+`
+  ${statStrip(d,[
+    {l:'In repair',f:D=>rmaNums(D).open.length,dir:-1,s:(v,D)=>{const n=rmaNums(D);return `${n.team.length} team · ${n.vendor.length} vendor · ${n.ready.length} not released`}},
+    {l:'Over SLA',f:D=>rmaNums(D).over.length,dir:-1,alert:v=>v>0,s:`${RMA_SLA.team} days team, ${RMA_SLA.vendor} days vendor`},
+    {l:`Released · ${rangeShort(d.k)}`,f:D=>rmaNums(D).rel.length,dir:1,s:(v,D)=>{const n=rmaNums(D);return `${n.comp.length} completed · ${n.fail.length} failed`}},
+    {l:'Average repair time',f:D=>rmaNums(D).avg,dir:-1,unit:' d',fmt:v=>v+' d',s:`Completed repairs released ${rangeIn(d.k)}`},
+    {l:`Estimated saving · ${rangeShort(d.k)}`,f:D=>rmaNums(D).saved,dir:1,unit:'M',fmt:v=>v+'M',s:'MMK, from released repairs'}])}
+  <section class="grid32">
+    <div class="panel"><div class="ph"><div><h3>Repairs by stage</h3><p class="sub">Open repairs plus repairs received or released ${rangeIn(d.k)}.</p></div></div>
+      <div class="pipe">${counts.map((n,i)=>n?`<i style="flex:${n};background:${RSTAGE_C[i]}" title="${RSTAGE[i]}: ${n}">${n}</i>`:'').join('')}</div>
+      <div class="pkeys">${RSTAGE.map((s,i)=>`<span><i style="background:${RSTAGE_C[i]}"></i>${s} · ${counts[i]}</span>`).join('')}</div></div>
+    <div class="panel"><div class="ph"><div><h3>Age of open repairs</h3><p class="sub">Days since received. Bars right of the line are past the ${RMA_SLA.team}-day team SLA.</p></div></div>
+      <div class="cols">${buckets.map(b=>`<div class="c" style="--c:${b.late?'var(--red)':'var(--pink)'}"><b>${b.n}</b><i style="height:${b.n/bm*100}px"></i></div>`).join('')}<span class="sla" style="left:calc(16px + (100% - 32px) * .5 - 7px)">SLA ${RMA_SLA.team} days</span></div>
+      <div class="clabels">${buckets.map(b=>`<span>${b.l}</span>`).join('')}</div></div>
+  </section>
+  <section class="grid2">
+    <div class="panel"><div class="ph"><div><h3>Top issues</h3><p class="sub">${R.recvW.length} tools received ${rangeIn(d.k)}.</p></div></div>
+      <div class="rbars">${issues.map(([l,n])=>`<div class="rbar" style="--c:var(--pink)"><span>${esc(l)}</span><div class="track"><i style="width:${n/im*100}%"></i></div><span class="num" style="text-align:right">${n}</span></div>`).join('')}</div></div>
+    <div class="panel"><div class="ph"><div><h3>Received by team</h3><p class="sub">Which teams sent the most tools for repair ${rangeIn(d.k)}.</p></div></div>
+      <div class="rbars">${teams.map(([l,n])=>`<div class="rbar" style="--c:var(--teal)"><span>${esc(l)}</span><div class="track"><i style="width:${n/tm*100}%"></i></div><span class="num" style="text-align:right">${n}</span></div>`).join('')}</div></div>
+  </section>
+  <section>${tableHTML(tables(d).rma[0],[['win',`All · ${rangeShort(d.k)}`],['over','Over SLA']].map(([v,l])=>`<button class="chip ${S.rmaF===v?'on':''}" data-act="rmaf" data-v="${v}">${l}</button>`).join(''))}</section>`;
+}
+function gngNums(D){const w=D.gng.win, qc=w.filter(r=>r.lqc==='Pass'||r.lqc==='Fail'), go=w.filter(r=>r.lead!=null);
+  return {w,wait:w.filter(r=>r.dec==='Pending'||r.dec==='Scheduled'),wait5:w.filter(r=>r.dec==='Pending'&&r.age>5),
+    failed:w.filter(r=>r.fails.length),fixed:w.filter(r=>r.fails.length&&r.fixDate),goFail:w.filter(r=>r.dec==='Go'&&r.fails.length),
+    week:w.filter(r=>r.age<=6),lqcPass:qc.filter(r=>r.lqc==='Pass').length,lqcN:qc.length,lqcRate:qc.length?Math.round(qc.filter(r=>r.lqc==='Pass').length/qc.length*1000)/10:0,
+    lead:go.length?Math.round(go.reduce((s,r)=>s+r.lead,0)/go.length*10)/10:0,goN:go.length};}
+function gngEquipment(d){
+  const y=d.k.slice(0,4);
+  const src=d.gng.win;
+  const keyf={team:r=>r.team||'No team',tsp:r=>r.tsp||'No TSP',month:r=>r.submit.slice(0,7)}[S.eqGroup];
+  const F=['olt','ca1','ca2','otb'], m={};
+  src.forEach(r=>{const k=keyf(r),g=m[k]||(m[k]={k,n:0,go:0,olt:0,ca1:0,ca2:0,otb:0});g.n++;if(r.dec==='Go')g.go++;F.forEach(f=>g[f]+=(+r[f]||0))});
+  const rows=Object.values(m).sort(S.eqGroup==='month'?(a,b)=>b.k.localeCompare(a.k):(a,b)=>b.n-a.n||a.k.localeCompare(b.k));
+  const tot={n:src.length,go:0,olt:0,ca1:0,ca2:0,otb:0};rows.forEach(g=>{tot.go+=g.go;F.forEach(f=>tot[f]+=g[f])});
+  const mx=Object.fromEntries(F.map(f=>[f,Math.max(1,...rows.map(g=>g[f]))]));
+  const lab=g=>S.eqGroup==='month'?`${MON[+g.k.slice(5,7)-1]} ${g.k.slice(0,4)}`:g.k;
+  const head={team:'Team',tsp:'TSP',month:'Month'}[S.eqGroup];
+  const scopeTxt=`submitted ${rangeIn(d.k)}`;
+  const cell=(g,f)=>g[f]?`<span class="eqv"><i style="width:${g[f]/mx[f]*100}%"></i><b>${g[f].toLocaleString('en-US')}</b></span>`:'<span class="eqv"><i style="visibility:hidden"></i><b class="eq0">0</b></span>';
+  S._eqcsv=[[head,'Projects','Go given','OLT','CA1','CA2','OTB'].join(','),...rows.map(g=>[`"${lab(g).replace(/"/g,'""')}"`,g.n,g.go,g.olt,g.ca1,g.ca2,g.otb].join(',')),['Total',tot.n,tot.go,tot.olt,tot.ca1,tot.ca2,tot.otb].join(',')].join('\n');
+  return `<section class="panel" id="p-gng-eq"><div class="ph"><div><h3>OLT, CA1, CA2 and OTB by ${head.toLowerCase()}</h3><p class="sub">Totals from the OLT, CA1, CA2 and OTB columns for ${src.length} projects ${scopeTxt}.</p></div>
+    <div class="tools"><div class="seg" role="group" aria-label="Group by">${[['team','Team'],['tsp','TSP'],['month','Month']].map(([v,l])=>`<button class="${S.eqGroup===v?'on':''}" data-act="eqgroup" data-v="${v}" aria-pressed="${S.eqGroup===v}">${l}</button>`).join('')}</div>
+      <button class="btn" data-act="eqcsv">${I.share}Copy as CSV</button></div></div>
+    ${rows.length?`<div class="tscroll" style="max-height:460px;overflow:auto"><table class="eqt"><thead><tr><th>${head}</th><th class="n">Projects</th><th class="n">Go given</th>${F.map(f=>`<th class="n">${f.toUpperCase()}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(g=>`<tr><td>${esc(lab(g))}</td><td class="n">${g.n}</td><td class="n">${g.go}</td>${F.map(f=>`<td class="n">${cell(g,f)}</td>`).join('')}</tr>`).join('')}</tbody>
+    <tfoot><tr><td>Total</td><td class="n">${tot.n}</td><td class="n">${tot.go}</td>${F.map(f=>`<td class="n">${tot[f].toLocaleString('en-US')}</td>`).join('')}</tr></tfoot></table></div>`
+    :`<div class="empty"><b>No projects in this period</b>Choose a longer period at the top of the page.</div>`}
+  </section>`;
+}
+function vGng(d){
+  const g=gngNums(d);
+  const months=[];for(let i=11;i>=0;i--){const m=toD(d.k);m.setDate(1);m.setMonth(m.getMonth()-i);const key=kOf(m).slice(0,7);months.push({key,l:MON[m.getMonth()],n:d.gng.all.filter(r=>r.submit.slice(0,7)===key).length})}
+  const mm=Math.max(1,...months.map(m=>m.n));
+  const qcs=[['Result','overall'],['Logical QC','lqc'],['Ground QC','gqc'],['NOC QC','nqc']].map(([l,k])=>{const p=g.w.filter(r=>r[k]==='Pass').length,f=g.w.filter(r=>r[k]==='Fail').length;return{l,p,f,n:p+f}});
+  return teamHeader(d,'gng',`${g.w.length} projects were submitted for Go/No-Go ${rangeIn(d.k)}. ${g.wait.length} ${g.wait.length===1?'is':'are'} waiting for a decision and ${g.goFail.length} went ahead with a failed QC.`)+`
+  ${statStrip(d,[
+    {l:`Submitted · ${rangeShort(d.k)}`,f:D=>gngNums(D).w.length,dir:0,s:(v,D)=>`${gngNums(D).week.length} in the last 7 days`},
+    {l:'Waiting for decision',f:D=>gngNums(D).wait.length,dir:-1,s:(v,D)=>{const n=gngNums(D).wait5.length;return n?`${n} waiting more than 5 days`:'None waiting more than 5 days'}},
+    {l:'QC failed',f:D=>gngNums(D).failed.length,dir:-1,s:(v,D)=>`${gngNums(D).fixed.length} with fix data submitted`},
+    {l:'Go with failed QC',f:D=>gngNums(D).goFail.length,dir:-1,alert:v=>v>0,s:'Needs a manager decision'},
+    {l:'Days to Go',f:D=>gngNums(D).lead,dir:-1,unit:' d',fmt:v=>v,s:(v,D)=>`Average, submit to Go (${gngNums(D).goN} projects)`}])}
+  <section class="grid2">
+    <div class="panel"><div class="ph"><div><h3>Submissions by month</h3><p class="sub">Projects submitted for Go/No-Go, last 12 months.</p></div></div>
+      <div class="cols">${months.map(m=>`<div class="c" style="--c:var(--indigo)"><b>${m.n||''}</b><i style="height:${m.n/mm*100}px"></i></div>`).join('')}</div>
+      <div class="clabels">${months.map(m=>`<span>${m.l}</span>`).join('')}</div></div>
+    <div class="panel"><div class="ph"><div><h3>QC results · ${rangeShort(d.k)}</h3><p class="sub">Pass rate where a result is recorded. Blank results are not counted.</p></div></div>
+      <div class="rbars">${qcs.map(q=>`<div class="rbar" style="--c:${q.n&&q.f/q.n>.15?'var(--orange)':'var(--green)'}"><span>${q.l}</span><div class="track"><i style="width:${q.n?q.p/q.n*100:0}%"></i></div><span class="num" style="text-align:right">${q.n?Math.round(q.p/q.n*100)+'%':'—'}</span></div><div class="sub" style="margin:-6px 0 0;font-size:12.5px">${q.p} pass · ${q.f} fail · ${g.w.length-q.n} blank</div>`).join('')}</div></div>
+  </section>
+  ${gngEquipment(d)}
+  <section>${tableHTML(tables(d).gng[0],[['win',`All · ${rangeShort(d.k)}`],['wait','Waiting for decision']].map(([v,l])=>`<button class="chip ${S.gngF===v?'on':''}" data-act="gngf" data-v="${v}">${l}</button>`).join(''))}</section>`;
+}
+
+/* ---------- chrome ---------- */
+function renderSide(d){
+  const item=(v,label,icon,c,badge,hot)=>`<button class="sitem ${S.view===v?'on':''}" data-act="nav" data-v="${v}" style="--c:${c}"><span class="ico">${icon}</span>${label}${badge!=null?`<span class="badge ${hot&&badge?'hot':''}">${badge}</span>`:''}</button>`;
+  const totalOpen=TEAM_IDS.reduce((s,t)=>s+teamStats(d,t).open.length,0);
+  $('#snav').innerHTML=`<div class="sgroup">Portal</div>${item('overview','Overview',I.overview,'var(--blue)')}
+   <div class="sgroup">Teams</div>${TEAM_IDS.map(t=>{const so=S.signoff[signKey(t)];return item(t,TEAMS[t].name,I[t],TEAMS[t].c,so?'✓':null)}).join('')}`;
+  $('#sfoot').innerHTML=`<div><small>Last upload</small>${dlong(d.k)}, ${esc(d.up.at.split(', ')[1]||d.up.at)}<small>${S.user?`Signed in as ${esc(S.user.email)}`:'Viewing is open to everyone. Sign in to upload.'}</small></div>`;
+  const mn=['overview',...TEAM_IDS];
+  return `<nav class="mnav">${mn.map(v=>`<button class="${S.view===v?'on':''}" data-act="nav" data-v="${v}">${VIEWS[v]}</button>`).join('')}</nav>`;
+}
+function renderBar(){
+  const i=S.days.indexOf(S.day);
+  $('#bar').innerHTML=`<button class="tbtn icon" id="sbBtn" data-act="sidebar" title="Show or hide sidebar" aria-label="Toggle sidebar">${I.sidebar}</button>
+   <button class="tbtn icon" data-act="day" data-k="${S.days[i+1]||''}" ${i>=S.days.length-1?'disabled':''} title="Previous report day" aria-label="Previous report day">${I.left}</button>
+   <button class="tbtn icon" data-act="day" data-k="${S.days[i-1]||''}" ${i<=0?'disabled':''} title="Next report day" aria-label="Next report day">${I.right}</button>
+   <div class="ttl">${S.view==='overview'?'<span class="fsbadge" style="margin:0">Full screen</span>':`<b>${VIEWS[S.view]}<span class="fsbadge">Full screen</span></b><small>${dlabel(S.day)}${i===0?' · latest report':''}</small>`}</div>
+   ${S.user?`<button class="tbtn" data-act="account" title="Signed in as ${esc(S.user.email)}"><span class="avatar" style="width:22px;height:22px;font-size:11px">${esc(S.user.email[0].toUpperCase())}</span><span class="lbl">${esc(S.user.email.split('@')[0])}</span></button>`:''}
+   <button class="tbtn pri" data-act="upload" data-dataset="rma" title="${S.user?'Upload RMA Excel':'Sign in to upload RMA'}">${S.user?I.upload:I.lock}<span class="lbl">RMA Upload</span></button>
+   <button class="tbtn pri" data-act="upload" data-dataset="gng" title="${S.user?'Upload Go No Go Excel':'Sign in to upload GNG'}">${S.user?I.upload:I.lock}<span class="lbl">GNG Upload</span></button>
+   <button class="tbtn" data-act="tpl">${I.tpl}<span class="lbl">Excel template</span></button>
+   <button class="tbtn danger" data-act="del" title="Delete this day">${I.trash}<span class="lbl">Delete this day</span></button>
+   <span class="vsep"></span>
+   <button class="tbtn icon" data-act="fullscreen" title="${isFs()?'Exit full screen':'Full screen'} (⌃⌘F)" aria-label="${isFs()?'Exit full screen':'Enter full screen'}">${isFs()?I.shrink:I.expand}</button>
+   <button class="tbtn icon" data-act="spot" title="Search (⌘K)" aria-label="Search">${I.search}</button>
+   <div class="seg" role="group" aria-label="Appearance">${['light','auto','dark'].map(t=>`<button class="${S.theme===t?'on':''}" data-act="theme" data-v="${t}" title="${t==='auto'?'Match system':t[0].toUpperCase()+t.slice(1)}" aria-label="${t} appearance">${I[t==='light'?'sun':t==='dark'?'moon':'auto']}</button>`).join('')}</div>`;
+}
+function applyTheme(){const r=document.documentElement; if(S.theme==='auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme',S.theme)}
+function render(keepScroll=true){
+  const d=data(S.day), c=$('#content'), top=c.scrollTop;
+  applyTheme(); renderBar();
+  const years=[...new Set((S.allDays.length?S.allDays:INITIAL_DAYS).map(k=>k.slice(0,4)))].sort().reverse();
+  const yearOptions=years.map(y=>`<option value="${y}" ${S.year===y?'selected':''}>${y}</option>`).join('');
+  const availableMonths=[...new Set((S.allDays.length?S.allDays:INITIAL_DAYS).filter(k=>k.slice(0,4)===S.year).map(k=>k.slice(5,7)))].sort();
+  const monthOptions=`<option value="all" ${S.month==='all'?'selected':''}>All months</option>`+availableMonths.map(v=>`<option value="${v}" ${S.month===v?'selected':''}>${MON[Number(v)-1]}</option>`).join('');
+  const periodDays=(S.allDays.length?S.allDays:INITIAL_DAYS).filter(k=>k.slice(0,4)===S.year&&(S.month==='all'||k.slice(5,7)===S.month));
+  const dayToggle=periodDays.length>7?`<button class="dpill day-toggle" data-act="toggle-days" aria-pressed="${S.viewAllDays}">${S.viewAllDays?'Show 7 Days':`View All (${periodDays.length})`}</button>`:'';
+  $('#days').innerHTML=`<span class="dgrp"><span>Report day</span>${S.days.length?S.days.map((k,i)=>{const hasData=(S.allDays||[]).includes(k);return `<button class="dpill ${k===S.day?'on':''} ${hasData?'':'no-data'}" data-act="day" data-k="${k}" aria-pressed="${k===S.day}" title="${hasData?'Report data available':'No upload recorded for this date'}">${dlabel(k)}${i===0?' · latest':''}${hasData?'':' · no data'}</button>`}).join(''):'<span class="sub">No dates available</span>'}${dayToggle}</span><span class="rng filters"><label class="rlab" for="reportYear">Year</label><select id="reportYear" data-report-filter="year">${yearOptions}</select><label class="rlab" for="reportMonth">Month</label><select id="reportMonth" data-report-filter="month">${monthOptions}</select></span>`;
+  const mnav=renderSide(d);
+  const v={overview:vOverview,rma:vRma,gng:vGng}[S.view]||vOverview;
+  c.innerHTML=mnav+v(d);
+  c.scrollTop=keepScroll?top:0;
+  renderDrawer();
+}
+
+/* ---------- inspector ---------- */
+function renderDrawer(){
+  const dr=$('#drawer');
+  if(!S.insp){dr.classList.remove('open');dr.innerHTML='';return}
+  const d=data(S.day), t=findTable(d,S.insp.t), r=t&&t.rows.find(x=>x.id===S.insp.id);
+  if(!r){S.insp=null;dr.classList.remove('open');return}
+  const T=TEAMS[t.team], v=vget(t.team,r.id);
+  dr.innerHTML=`<div class="dr-h" style="--c:${T.c}"><i class="dot"></i><span>${T.name} · ${t.title}</span><button class="ib" data-act="closeinsp" aria-label="Close inspector">${I.close}</button></div>
+   <div class="dr-b"><h2>${esc(t.name(r))}</h2>
+    ${r.attn?`<div class="dr-attn"><b>Why this needs attention</b><br>${esc(r.attn)}</div>`:''}
+    <dl>${t.cols.map(c=>`<dt>${c.l}</dt><dd class="${c.mm?'mm':''}">${(()=>{const v=c.fmt?c.fmt(r):esc(c.get?c.get(r):r[c.k]);return v===''||v==null?'—':v})()}</dd>`).join('')}</dl>
+    <p class="hist">Source: ${esc(d.up.file)}, uploaded ${d.up.at}.</p></div>`;
+  dr.classList.add('open');
+}
+
+/* ---------- sheets ---------- */
+const ov=$('#ov');
+function sheet(html,cls='sheet'){ov.innerHTML=`<div class="${cls}" role="dialog" aria-modal="true">${html}</div>`;ov.hidden=false;setTimeout(()=>{const f=ov.querySelector('[autofocus],input,button.pri,button');f&&f.focus()},30)}
+function closeSheet(){ov.hidden=true;ov.innerHTML=''}
+
+function getTemplateHeaders(){
+  return {
+    rma: [
+      'Months','Received Dated(RMA)','Inbound Team','Sender Name','ID','Team Manager',
+      'Device Name','Device Type','Main Board S/N','Body S/N','Status Category','Issue',
+      'Detail Resolutions','Changing Resolutions 1','Changing Resolutions 2','Changing Resolutions 3',
+      'Outbound from Inv RMA','Inbound to Inv RMA','User Error (or) Not','Adapter','Vendor Name',
+      'Send Date to Procurement','Receive Date from Procurement','Inbound to Inv Main',
+      'Outbound By Cross Team','Release Months','Release Date','Outbound Person','ID',
+      'Detail Remark','Estimate Saved Amount(MMK)','Curent Inhand Team','Final Status'
+    ],
+    gng: [
+      'No','Project Name','TSP','Team Name','OLT','CA1','CA2','OTB','GNG Mode','(Pass/Fail)',
+      'Logical QC','Ground QC','NOC QC','Submit Date','QC Fail Data Submit Date',
+      'QC Fail Fix Data Submit Date','Go No Go Date','Link Information Address',
+      'After QC Fail Fix Link Information Address','STRM Remark'
+    ]
+  };
+}
+function sheetTemplate(){
+  const {rma:rmaHeaders,gng:gngHeaders}=getTemplateHeaders();
+  sheet(`<h2>Excel templates</h2><p class="lead">Download an Excel template or copy the column headers for each dataset. Keep the headers exactly as shown.</p>
+   <div class="tpl">
+    <section class="tpl-card">
+      <b>RMA</b>
+      <span class="tpl-cols">${rmaHeaders.map(esc).join(', ')}</span>
+      <div class="tpl-actions">
+        <button class="btn pri" data-act="downloadtemplate" data-template="rma">${I.tpl} Download RMA template</button>
+        <button class="btn" data-act="copytpl" data-template="rma">Copy RMA column headers</button>
+      </div>
+    </section>
+    <section class="tpl-card">
+      <b>Go No Go</b>
+      <span class="tpl-cols">${gngHeaders.map(esc).join(', ')}</span>
+      <div class="tpl-actions">
+        <button class="btn pri" data-act="downloadtemplate" data-template="gng">${I.tpl} Download Go No Go template</button>
+        <button class="btn" data-act="copytpl" data-template="gng">Copy Go No Go column headers</button>
+      </div>
+    </section>
+   </div>
+   <div class="acts"><button class="btn" data-act="closesheet">Close</button></div>`);
+}
+function copyTemplateHeaders(type){
+  const headers=getTemplateHeaders();
+  const selected=headers[type];
+  if(!selected){toast('Please choose a dataset.');return}
+  copyText(selected.join('\t'),`${type==='rma'?'RMA':'Go No Go'} column headers copied`);
+}
+function buildStyledTemplateSheet(headers){
+  const ws = XLSX.utils.aoa_to_sheet([headers]);
+  const lastCol = XLSX.utils.encode_col(headers.length - 1);
+  const headerStyle = {
+    font: { name: 'Arial', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { patternType: 'solid', fgColor: { rgb: '4472C4' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: {
+      top: { style: 'thin', color: { rgb: 'D9E2F3' } },
+      bottom: { style: 'thin', color: { rgb: 'D9E2F3' } },
+      left: { style: 'thin', color: { rgb: 'D9E2F3' } },
+      right: { style: 'thin', color: { rgb: 'D9E2F3' } }
+    }
+  };
+  headers.forEach((_, i) => {
+    const cell = XLSX.utils.encode_cell({ r: 0, c: i });
+    if (ws[cell]) ws[cell].s = headerStyle;
+  });
+  ws['!cols'] = headers.map(h => ({ wch: Math.min(34, Math.max(14, String(h).length + 4)) }));
+  ws['!rows'] = [{ hpt: 34 }];
+  ws['!autofilter'] = { ref: `A1:${lastCol}1` };
+  ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+  return ws;
+}
+function downloadTemplate(type){
+  if(!window.XLSX){toast('Excel library could not load. Check your internet connection and try again.');return}
+  const headers=getTemplateHeaders();
+  const wb = XLSX.utils.book_new();
+  if(type==='rma'){
+    XLSX.utils.book_append_sheet(wb, buildStyledTemplateSheet(headers.rma), 'RMA');
+    XLSX.writeFile(wb, 'RMA_Template.xlsx');
+    toast('RMA template downloaded.');
+  }else if(type==='gng'){
+    XLSX.utils.book_append_sheet(wb, buildStyledTemplateSheet(headers.gng), 'Go No Go');
+    XLSX.writeFile(wb, 'Go_No_Go_Template.xlsx');
+    toast('Go No Go template downloaded.');
+  }else{
+    toast('Please choose a template to download.');
+  }
+}
+function sheetDelete(){
+  const one=S.days.length<=1;
+  sheet(`<h2>Delete ${dlabel(S.day)}?</h2><p class="lead">This removes the uploaded report for ${dlong(S.day)} and every verification, flag and sign-off made on it. Other report days are not affected. You can upload the file again afterwards.</p>
+   ${one?'<p class="sub">This is the only report day left, so it cannot be deleted.</p>':''}
+   <div class="acts"><button class="btn" data-act="closesheet" autofocus>Cancel</button><button class="btn red" data-act="dodel" ${one?'disabled':''}>${I.trash}Delete day</button></div>`);
+}
+function sheetLogin(){
+  sheet(`<h2>Sign in to upload</h2><p class="lead">Anyone can view the portal. Uploading a daily report changes the data everyone sees, so it needs a signed-in account.</p>
+   <form id="loginForm" novalidate style="display:grid;gap:12px">
+     <label class="fl" for="loginEmail" style="margin:0">Work email<input id="loginEmail" type="email" autocomplete="username" required placeholder="name@company.com" style="display:block;width:100%;margin-top:6px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0 10px;font-weight:400"></label>
+     <label class="fl" for="loginPw" style="margin:0">Password<input id="loginPw" type="password" autocomplete="current-password" required style="display:block;width:100%;margin-top:6px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0 10px;font-weight:400"></label>
+     <p id="loginErr" class="sub" style="color:var(--red);margin:0" hidden></p>
+     <p class="sub" style="margin:0">Sign in with your authorized Operations Dashboard account.</p>
+     <div class="acts" style="margin-top:4px"><button type="button" class="btn" data-act="closesheet">Cancel</button><button type="submit" class="btn pri">Sign in</button></div>
+   </form>`);
+  setTimeout(()=>{const e=$('#loginEmail');e&&e.focus()},40);
+}
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='loginForm') return; e.preventDefault();
+  const em=$('#loginEmail').value.trim(), pw=$('#loginPw').value, err=$('#loginErr');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)||!pw){err.textContent='Enter a valid work email and password.';err.hidden=false;return}
+  err.hidden=true; const btn=e.target.querySelector('button[type=submit]'); if(btn){btn.disabled=true;btn.textContent='Signing in…'}
+  try{await doLogin(em,pw);closeSheet();toast(`Signed in as ${em}`);render();sheetUpload(S._uploadDataset)}
+  catch(ex){err.textContent=ex.message||'Sign-in failed. Check your email and password.';err.hidden=false;if(btn){btn.disabled=false;btn.textContent='Sign in'}}
+});
+function sheetUpload(dataset='rma'){
+  S._uploadDataset = dataset === 'gng' ? 'gng' : 'rma';
+  const isRma = S._uploadDataset === 'rma';
+  const label = isRma ? 'RMA' : 'Go No Go (GNG)';
+  const inputId = isRma ? 'file-rma' : 'file-gng';
+  sheet(`<h2>Upload ${label} Excel</h2><p class="lead">Choose the ${label} Excel file. It will be uploaded only to the ${label} dataset.</p>
+   <label class="drop" id="drop" for="${inputId}">${I.upload}<b>Drop the ${label} .xlsx file here</b><span>or choose a file from your Mac</span>
+     <input id="${inputId}" data-upload-dataset="${S._uploadDataset}" type="file" accept=".xlsx" hidden></label>
+   <div class="acts"><button class="btn" data-act="closesheet">Cancel</button></div>`);
+}
+function uploadProgressUI(file,label){
+  const size=file.size<1024*1024?`${(file.size/1024).toFixed(0)} KB`:`${(file.size/1024/1024).toFixed(2)} MB`;
+  sheet(`<h2>Uploading ${label}</h2><p class="lead">Please keep this window open while your file is being processed.</p>
+    <div class="upload-panel" id="uploadPanel">
+      <div class="upload-file"><div class="uf-icon">${I.tpl}</div><div class="uf-meta"><div class="uf-name">${esc(file.name)}</div><div class="uf-size">Excel workbook · ${size}</div></div></div>
+      <div class="upload-state"><span class="upload-spin" id="uploadSpinner"></span><span id="uploadStatus">Preparing secure upload…</span></div>
+      <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
+      <div class="upload-percent"><span id="uploadDetail">Connecting to server</span><b id="uploadPercent">0%</b></div>
+      <div class="upload-steps">
+        <div class="upload-step active" id="upStep1"><span class="us-dot">1</span>Sending Excel file</div>
+        <div class="upload-step" id="upStep2"><span class="us-dot">2</span>Validating and importing rows</div>
+        <div class="upload-step" id="upStep3"><span class="us-dot">3</span>Refreshing dashboard</div>
+      </div>
+      <div id="uploadResult" hidden></div>
+    </div>
+    <div class="acts"><button class="btn" data-act="closesheet" id="uploadClose">Close</button></div>`);
+}
+function setUploadProgress(percent,status,detail,step){
+  const fill=$('#uploadFill'),pct=$('#uploadPercent'),st=$('#uploadStatus'),dt=$('#uploadDetail');
+  if(fill)fill.style.width=`${Math.max(0,Math.min(100,percent))}%`;
+  if(pct)pct.textContent=`${Math.round(percent)}%`;
+  if(st)st.textContent=status;
+  if(dt)dt.textContent=detail;
+  for(let i=1;i<=3;i++){const el=$(`#upStep${i}`);if(el){el.classList.toggle('done',i<step);el.classList.toggle('active',i===step);if(i<step)el.querySelector('.us-dot').textContent='✓';}}
+}
+async function runUpload(file,dataset){
+  dataset = dataset === 'gng' ? 'gng' : 'rma';
+  if(!(file instanceof File)){toast('Please choose an Excel file.');return}
+  if(!S.user){S._uploadDataset=dataset;sheetLogin();return}
+  if(!/\.xlsx$/i.test(file.name)){toast('Please upload an .xlsx file.');return}
+  if(file.size===0||file.size>10*1024*1024){toast('File must be between 1 byte and 10 MB.');return}
+  const label = dataset === 'rma' ? 'RMA' : 'Go No Go (GNG)';
+  uploadProgressUI(file,label);
+  const closeBtn=$('#uploadClose');if(closeBtn)closeBtn.disabled=true;
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session) throw new Error('Your session expired. Please sign in again.');
+    const fn=file.name.toLowerCase();
+    const looksOther = dataset === 'rma' ? (fn.includes('gng')||fn.includes('go_no_go')||fn.includes('gonogo')) : fn.includes('rma');
+    if(looksOther) throw new Error(`This file name looks like the other dataset. Please choose the ${label} Excel file.`);
+    const fd=new FormData();fd.append('file',file);fd.append('dataset',dataset);
+    setUploadProgress(3,'Connecting securely…','Preparing file transfer',1);
+    const result=await new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST',SUPABASE_URL+'/functions/v1/excel-upload');
+      xhr.setRequestHeader('apikey',SUPABASE_ANON_KEY);
+      xhr.setRequestHeader('Authorization','Bearer '+session.access_token);
+      xhr.upload.onprogress=e=>{
+        if(e.lengthComputable){
+          const pct=5+(e.loaded/e.total)*75;
+          setUploadProgress(pct,'Uploading Excel file…',`${Math.round(e.loaded/1024).toLocaleString()} KB of ${Math.round(e.total/1024).toLocaleString()} KB sent`,1);
+          if(e.loaded>=e.total)setUploadProgress(82,'File sent. Processing…','Waiting for Supabase to validate and import rows',2);
+        }else setUploadProgress(35,'Uploading Excel file…','Sending file to Supabase',1);
+      };
+      xhr.onload=()=>{
+        let body={};try{body=JSON.parse(xhr.responseText||'{}')}catch{}
+        if(xhr.status>=200&&xhr.status<300)resolve(body);
+        else reject(new Error(body.error||body.message||body.details||'Upload failed.'));
+      };
+      xhr.onerror=()=>reject(new Error('Network error. Check your internet connection and try again.'));
+      xhr.ontimeout=()=>reject(new Error('Upload timed out. Please try again.'));
+      xhr.timeout=180000;
+      xhr.send(fd);
+    });
+    setUploadProgress(88,'Import complete. Refreshing dashboard…','Loading the latest records',3);
+    await loadDashboardData();
+    setUploadProgress(100,'Upload successful','Dashboard data is up to date',4);
+    const spinner=$('#uploadSpinner');if(spinner)spinner.style.display='none';
+    const resultBox=$('#uploadResult');
+    if(resultBox){resultBox.hidden=false;resultBox.className='upload-result';resultBox.textContent=`${label} upload completed successfully.${Number.isFinite(result.imported_rows)?` ${result.imported_rows} rows imported.`:''}${Number.isFinite(result.skipped_rows)&&result.skipped_rows>0?` ${result.skipped_rows} invalid or empty-ID rows skipped.`:''}`;}
+    if(closeBtn){closeBtn.disabled=false;closeBtn.textContent='Done';}
+    S.cache={};render();toast(`${label} Excel uploaded successfully.`);
+  }catch(ex){
+    const msg=ex.message||'Upload failed.';
+    const spinner=$('#uploadSpinner');if(spinner)spinner.style.display='none';
+    const st=$('#uploadStatus');if(st)st.textContent='Upload could not be completed';
+    const detail=$('#uploadDetail');if(detail)detail.textContent='Please check the error below';
+    const resultBox=$('#uploadResult');if(resultBox){resultBox.hidden=false;resultBox.className='upload-result error';resultBox.textContent=msg;}
+    if(closeBtn){closeBtn.disabled=false;closeBtn.textContent='Close';}
+    toast(msg);
+  }
+}
+
+/* ---------- export ---------- */
+function csvOf(t){
+  const d=data(S.day), q=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const head=[...t.cols.map(c=>c.l),'Needs attention'];
+  const lines=t.rows.map(r=>[...t.cols.map(c=>c.get?c.get(r):r[c.k]),r.attn].map(q).join(','));
+  return [head.map(q).join(','),...lines].join('\n');
+}
+async function copyText(txt,ok){
+  try{await navigator.clipboard.writeText(txt);toast(ok)}
+  catch(e){sheet(`<h2>Copy manually</h2><p class="lead">The clipboard is not available here. The text is selected below; press ⌘C.</p><textarea id="cp" style="min-height:220px;font-size:12px">${esc(txt)}</textarea><div class="acts"><button class="btn pri" data-act="closesheet">Done</button></div>`);setTimeout(()=>{const a=$('#cp');a&&a.select()},40)}
+}
+function openMenu(btn,html){const m=$('#menu'),b=btn.getBoundingClientRect();m.innerHTML=html;m.hidden=false;
+  const w=m.offsetWidth;m.style.left=Math.max(8,Math.min(innerWidth-w-8,b.right-w))+'px';m.style.top=(b.bottom+4)+'px'}
+const closeMenu=()=>{$('#menu').hidden=true};
+
+/* ---------- spotlight ---------- */
+function openSpot(){
+  sheet(`<input id="spq" type="search" placeholder="Jump to a device, S/N, GNG project or township…" aria-label="Search portal" autofocus><ul id="spl"></ul>`,'spot');
+  S._spi=0; spotList('');
+}
+function spotList(q){
+  const d=data(S.day), ql=q.trim().toLowerCase();
+  let items=Object.entries(VIEWS).map(([v,l])=>({l,s:'Go to',a:`data-act="nav" data-v="${v}"`}));
+  if(ql) allTables(d).forEach(t=>t.rows.forEach(r=>items.push({l:t.name(r),s:`${TEAMS[t.team].name} · ${t.title}${r.attn?' · needs attention':''}`,a:`data-act="open" data-t="${t.id}" data-id="${r.id}"`,x:t.cols.map(c=>c.get?c.get(r):r[c.k]).join(' ')})));
+  items=items.filter(i=>!ql||(i.l+' '+i.s+' '+(i.x||'')).toLowerCase().includes(ql)).slice(0,40);
+  S._spi=Math.min(S._spi,Math.max(0,items.length-1));
+  $('#spl').innerHTML=items.length?items.map((i,ix)=>`<li ${i.a} class="${ix===S._spi?'on':''}">${esc(i.l)}<small>${esc(i.s)}</small></li>`).join(''):'<li style="cursor:default">No matches. Try a township code like INY or an RMA ID.</li>';
+}
+
+/* ---------- full screen ---------- */
+const isFs=()=>$('#win').classList.contains('fs');
+function setFs(on){$('#win').classList.toggle('fs',on);renderBar()}
+async function toggleFs(){
+  const want=!isFs();
+  try{
+    if(want&&document.fullscreenEnabled&&!document.fullscreenElement) await document.documentElement.requestFullscreen();
+    else if(!want&&document.fullscreenElement) await document.exitFullscreen();
+  }catch(e){ if(want) toast('Browser full screen is blocked here, so the sidebar is hidden instead') }
+  setFs(want);
+}
+document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement&&isFs()) setFs(false) });
+
+/* ---------- toast ---------- */
+let tt; function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2600)}
+
+/* ---------- navigation ---------- */
+function go(v){ if(!VIEWS[v]) v='overview'; S.view=v; S.insp=null; if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); render(false) }
+addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(v!==S.view&&VIEWS[v]){S.view=v;S.insp=null;render(false)}});
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  if(!$('#menu').hidden&&!e.target.closest('#menu')&&!e.target.closest('[data-act="export"]')) closeMenu();
+  if(e.target===ov){closeSheet();return}
+  const a=e.target.closest('[data-act]'); if(!a) return;
+  const act=a.dataset.act, team=a.dataset.team, id=a.dataset.id, d=data(S.day);
+  const note=()=>a.dataset.note?($('#note')?.value??''):undefined;
+  switch(act){
+    case 'nav': closeSheet(); go(a.dataset.v); break;
+    case 'day': if(a.dataset.k){S.day=a.dataset.k;S.insp=null;S.sel={};render()} break;
+    case 'toggle-days': S.viewAllDays=!S.viewAllDays; applyReportDayRange(); S.insp=null; render(false); toast(S.viewAllDays?'Showing all report days':'Showing the latest 7 report days'); break;
+    case 'open': closeSheet(); if(e.target.closest('input,button:not([data-act="open"])')&&a.tagName==='TR') return; S.insp={t:a.dataset.t,id}; renderDrawer(); break;
+    case 'closeinsp': S.insp=null; renderDrawer(); break;
+    case 'attnonly': S.attnOnly[a.dataset.t]=!S.attnOnly[a.dataset.t]; if(S.pager[a.dataset.t])S.pager[a.dataset.t].page=1; render(); break;
+    case 'page': if(S.pager[a.dataset.t]){S.pager[a.dataset.t].page=+a.dataset.page;render()} break;
+    case 'pagesize': if(S.pager[a.dataset.t]){S.pager[a.dataset.t].size=+a.dataset.size;S.pager[a.dataset.t].page=1;render()} break;
+    case 'pagego': {const el=$(`#go-${a.dataset.t}`),p=Math.max(1,Math.min(+el?.value||1,Math.ceil((findTable(d,a.dataset.t)?.rows.length||0)/(S.pager[a.dataset.t]?.size||20))));if(S.pager[a.dataset.t])S.pager[a.dataset.t].page=p;render();break}
+    case 'rmaf': S.rmaF=a.dataset.v; render(); break;
+    case 'eqgroup': S.eqGroup=a.dataset.v; render(); break;
+    case 'eqcsv': copyText(S._eqcsv,'Copied the equipment table as CSV'); break;
+    case 'gngf': S.gngF=a.dataset.v; render(); break;
+    case 'clearfilters': if(a.dataset.team==='rma'){S.rmaFilters={};S.rmaSearch='';S.pager['rma-cases'].page=1}else{S.gngFilters={};S.gngSearch='';S.pager['gng-jobs'].page=1} render(); break;
+    case 'export': {const t=findTable(d,a.dataset.t); S._exp=t.id; openMenu(a,`<button data-act="copycsv">Copy as CSV</button><button data-act="proto" data-msg="Excel export would save ${TEAMS[t.team].name}_${t.title.replace(/\W+/g,'-')}_${S.day}.xlsx">Export to Excel (.xlsx)</button><hr><button data-act="copycsv" data-open="1">Copy rows that need attention</button>`); break}
+    case 'copycsv': {closeMenu(); const t=findTable(d,S._exp); const tt=a.dataset.open?{...t,rows:t.rows.filter(r=>r.attn&&!vget(t.team,r.id))}:t; copyText(csvOf(tt),`Copied ${tt.rows.length} rows as CSV`); break}
+    case 'proto': closeMenu(); closeSheet(); toast('Prototype: '+a.dataset.msg); break;
+    case 'downloadtemplate': downloadTemplate(a.dataset.template); break;
+    case 'upload': S._uploadDataset=a.dataset.dataset==='gng'?'gng':'rma'; if(S.user) sheetUpload(S._uploadDataset); else sheetLogin(); break;
+    case 'account': openMenu(a,`<button disabled style="opacity:.7">${esc(S.user.email)}</button><hr><button data-act="signout">Sign out</button>`); break;
+    case 'signout': closeMenu(); doLogout().then(()=>{toast('Signed out');render()}).catch(e=>toast(e.message)); break;
+    case 'samplefile': runUpload(`Operation_Daily_Report (${String(toD(addDays(S.days[0],1)).getDate()).padStart(2,'0')}-${MON[toD(addDays(S.days[0],1)).getMonth()]}-2026).xlsx`); break;
+    case 'addday': {const k=a.dataset.k; S.uploads[k]={file:a.dataset.f,at:new Date().toLocaleString('en-GB')}; if(!S.allDays.includes(k))S.allDays.unshift(k); S.allDays.sort().reverse(); applyReportDayRange(); if(S.days.includes(k))S.day=k; closeSheet(); toast(`Added ${dlabel(k)}`); go('overview'); break}
+    case 'showrows': closeSheet(); tables(d)[team].forEach(t=>S.attnOnly[t.id]=true); go(team); break;
+    case 'tpl': sheetTemplate(); break;
+    case 'copytpl': copyTemplateHeaders(a.dataset.template); break;
+    case 'del': sheetDelete(); break;
+    case 'dodel': {const k=S.day,i=S.days.indexOf(k); S.allDays=S.allDays.filter(x=>x!==k); applyReportDayRange(); Object.keys(S.val).forEach(x=>x.startsWith(k+'|')&&delete S.val[x]); Object.keys(S.signoff).forEach(x=>x.startsWith(k+'|')&&delete S.signoff[x]); Object.keys(S.cache).forEach(x=>x.startsWith(k+'|')&&delete S.cache[x]); S.day=S.days[Math.min(i,S.days.length-1)]||S.days[0]||TODAY_KEY; closeSheet(); toast(`Deleted ${dlabel(k)}`); render(); break}
+    case 'closesheet': closeSheet(); break;
+    case 'theme': S.theme=a.dataset.v; try{localStorage.setItem('odp-theme',S.theme)}catch(_){} render(); break;
+    case 'sidebar': {const w=$('#win');w.classList.toggle('nosb');try{localStorage.setItem('odp-nosb',w.classList.contains('nosb')?'1':'0')}catch(_){} break}
+    case 'spot': openSpot(); break;
+    case 'navattn': {const tm=a.dataset.v; tables(d)[tm].forEach(t=>S.attnOnly[t.id]=true); go(tm); break}
+    case 'topall': S.topAll=!S.topAll; render(); break;
+    case 'fullscreen': toggleFs(); break;
+  }
+});
+document.addEventListener('input',e=>{
+  if(e.target.dataset.filterSearch){if(e.target.dataset.filterSearch==='rma'){S.rmaSearch=e.target.value;S.pager['rma-cases'].page=1}else{S.gngSearch=e.target.value;S.pager['gng-jobs'].page=1};const pos=e.target.selectionStart;render();const el=document.querySelector(`[data-filter-search=\"${e.target.dataset.filterSearch}\"]`);if(el){el.focus();el.setSelectionRange(pos,pos)}return}
+  if(e.target.id==='spq'){S._spi=0;spotList(e.target.value)}
+});
+document.addEventListener('change',e=>{if(e.target.dataset.reportFilter){const key=e.target.dataset.reportFilter;if(key==='year'){S.year=e.target.value;S.month='all';S.viewAllDays=false}else if(key==='month'){S.month=e.target.value;S.viewAllDays=false}applyReportDayRange();S.insp=null;render(false);toast(S.days.length?`Showing ${S.month==='all'?'all months':MON[Number(S.month)-1]} ${S.year}`:`No reports for this selection`);return}if(e.target.dataset.filterTeam){const team=e.target.dataset.filterTeam,key=e.target.dataset.filterKey,state=team==='rma'?S.rmaFilters:S.gngFilters;S.pager[team==='rma'?'rma-cases':'gng-jobs'].page=1;if(e.target.value)state[key]=e.target.value;else delete state[key];render();return}if(e.target.matches('input[data-upload-dataset]')&&e.target.files[0]) runUpload(e.target.files[0],e.target.dataset.uploadDataset)});
+document.addEventListener('dragover',e=>{const z=e.target.closest&&e.target.closest('#drop');if(z){e.preventDefault();z.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const z=e.target.closest&&e.target.closest('#drop');if(z)z.classList.remove('over')});
+document.addEventListener('drop',e=>{const z=e.target.closest&&e.target.closest('#drop');if(z){e.preventDefault();const f=e.dataTransfer.files[0];if(f)runUpload(f,S._uploadDataset)}});
+document.addEventListener('keydown',e=>{
+  if(e.target.dataset.pageInput&&e.key==='Enter'){e.preventDefault();document.querySelector(`[data-act="pagego"][data-t="${e.target.dataset.pageInput}"]`)?.click()}
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSpot();return}
+  if((e.ctrlKey&&e.metaKey&&e.key.toLowerCase()==='f')||(e.key==='F11')){e.preventDefault();toggleFs();return}
+  if(e.key==='Escape'){if(!$('#menu').hidden)closeMenu();else if(!ov.hidden)closeSheet();else if(S.insp){S.insp=null;renderDrawer()}else if(isFs()&&!document.fullscreenElement)setFs(false)}
+  if(!ov.hidden&&$('#spl')&&['ArrowDown','ArrowUp','Enter'].includes(e.key)){const li=[...$('#spl').querySelectorAll('li[data-act]')];if(!li.length)return;e.preventDefault();
+    if(e.key==='Enter'){li[S._spi]?.click();return} S._spi=(S._spi+(e.key==='ArrowDown'?1:-1)+li.length)%li.length; li.forEach((l,i)=>l.classList.toggle('on',i===S._spi)); li[S._spi].scrollIntoView({block:'nearest'})}
+});
+
+/* ---------- Supabase integration ---------- */
+// Paste your Supabase Publishable Key below on your own computer. Never use service_role here.
+const SUPABASE_URL = 'https://oiogtdmduilkqnrtegvj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pb2d0ZG1kdWlsa3FucnRlZ3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0NjQyODQsImV4cCI6MjEwOTA0MDI4NH0.u329McoKTDz3KnU9W5JTwtQQNOuwAA1Pd-vHuByGRLs'; // Replace this value locally before publishing.
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const normKey = x => String(x??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function field(obj, names){
+  const entries=Object.entries(obj||{}); for(const n of names){const target=normKey(n);const hit=entries.find(([k])=>normKey(k)===target);if(hit)return hit[1]}
+  return '';
+}
+function excelDate(v){
+  if(v==null||v==='')return '';
+  // Excel may store dates as serial numbers (or numeric strings).
+  if(typeof v==='number'||(/^\d+(?:\.\d+)?$/.test(String(v).trim()))){
+    const n=Number(v);
+    if(Number.isFinite(n)&&n>20000&&n<80000){
+      const d=new Date(Date.UTC(1899,11,30)+Math.floor(n)*86400000);
+      return Number.isNaN(d.getTime())?'':d.toISOString().slice(0,10);
+    }
+  }
+  const s=String(v).trim();
+  // Already ISO formatted.
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:$|T|\s)/);
+  if(m){
+    const y=Number(m[1]),mo=Number(m[2]),day=Number(m[3]);
+    const d=new Date(Date.UTC(y,mo-1,day));
+    return d.getUTCFullYear()===y&&d.getUTCMonth()===mo-1&&d.getUTCDate()===day?`${y}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`:'';
+  }
+  // This workbook uses US month/day/year values, e.g. 4/26/2024.
+  m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);
+  if(m){
+    const mo=Number(m[1]),day=Number(m[2]);let y=Number(m[3]);
+    if(y<100)y+=y>=70?1900:2000;
+    const d=new Date(Date.UTC(y,mo-1,day));
+    return mo>=1&&mo<=12&&day>=1&&d.getUTCFullYear()===y&&d.getUTCMonth()===mo-1&&d.getUTCDate()===day?`${y}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`:'';
+  }
+  m=s.match(/^(\d{1,2})[-\s]([A-Za-z]{3,9})[-\s,]+(\d{2,4})$/);
+  if(m){
+    const months={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+    const mo=months[m[2].slice(0,3).toLowerCase()];let y=Number(m[3]);if(y<100)y+=y>=70?1900:2000;
+    const day=Number(m[1]);if(mo){const d=new Date(Date.UTC(y,mo-1,day));if(d.getUTCFullYear()===y&&d.getUTCMonth()===mo-1&&d.getUTCDate()===day)return `${y}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`;}
+  }
+  return '';
+}
+function rmaArray(row){const d=row.data||{};return [row.row_number,excelDate(field(d,['Received Dated(RMA)','Received Dated RMA'])),field(d,['Inbound Team']),field(d,['Sender Name']),field(d,['ID']),field(d,['Team Manager']),field(d,['Device Name']),field(d,['Device Type']),field(d,['Main Board S/N']),field(d,['Body S/N']),field(d,['Status Category']),field(d,['Issue']),field(d,['Detail Resolutions']),field(d,['Changing Resolutions 1']),field(d,['Changing Resolutions 2']),field(d,['Changing Resolutions 3']),field(d,['Outbound from Inv RMA']),field(d,['Inbound to Inv RMA']),field(d,['User Error (or) Not']),field(d,['Adapter']),field(d,['Vendor Name']),excelDate(field(d,['Send Date to Procurement'])),excelDate(field(d,['Receive Date from Procurement'])),field(d,['Inbound to Inv Main']),field(d,['Outbound By Cross Team']),excelDate(field(d,['Release Date'])),field(d,['Outbound Person']),field(d,['ID']),field(d,['Detail Remark']),field(d,['Estimate Saved Amount(MMK)']),field(d,['Curent Inhand Team','Current Inhand Team']),field(d,['Final Status'])];}
+function gngArray(row){const d=row.data||{};return [row.row_number,field(d,['Project Name']),field(d,['TSP']),field(d,['Team Name']),field(d,['OLT']),field(d,['CA1']),field(d,['CA2']),field(d,['OTB']),field(d,['GNG Mode']),field(d,['(Pass/Fail)','Pass/Fail']),field(d,['Logical QC']),field(d,['Ground QC']),field(d,['NOC QC']),excelDate(field(d,['Submit Date'])),excelDate(field(d,['QC Fail Data Submit Date'])),excelDate(field(d,['QC Fail Fix Data Submit Date'])),excelDate(field(d,['Go No Go Date'])),field(d,['LInk Information Address','Link Information Address']),field(d,['After QC Fail Fix LInk Information Address','After QC Fail Fix Link Information Address']),field(d,['STRM Remark'])];}
+async function fetchAll(table){
+  let out=[],from=0;
+
+  while(true){
+    const {data,error}=await sb
+      .from(table)
+      .select('id,source_file_id,sheet_name,row_number,data,is_active,created_at')
+      .eq('is_active',true)
+      .order('created_at',{ascending:false})
+      .range(from,from+999);
+
+    if(error)throw error;
+
+    out=out.concat(data||[]);
+
+    if(!data||data.length<1000)break;
+    from+=1000;
+  }
+
+  return out;
+}
+async function loadDashboardData(){
+  const [r,g]=await Promise.all([
+    fetchAll('rma_records'),
+    fetchAll('gng_records')
+  ]);
+
+  if(!r.length&&!g.length)
+    throw new Error('Supabase has no active Excel records yet. Upload the RMA and Go No Go Excel files first.');
+
+  RMA_UPLOAD_RAW=r;
+  GNG_UPLOAD_RAW=g;
+
+  RMA_RAW=r.map(row=>{
+    const x=rmaArray(row);
+    x.uploadDay=localUploadDay(row.created_at);
+    return x;
+  });
+  GNG_RAW=g.map(row=>{const x=gngArray(row);x.uploadDay=localUploadDay(row.created_at);return x;}).filter(x=>x[13]);
+
+  S.cache={};
+  S.allDays=[...new Set([...r,...g].map(row=>localUploadDay(row.created_at)).filter(Boolean))].sort().reverse();
+  if(!S.allDays.length)S.allDays=INITIAL_DAYS.slice();
+  const latest=S.allDays[0]||TODAY_KEY;
+  S.year=latest.slice(0,4); S.month='all';
+  applyReportDayRange();
+  S.day=S.days[0]||TODAY_KEY;
+}
+async function doLogin(email,password){
+  const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;
+  const user=data.user; const {data:profile,error:pe}=await sb.from('profiles').select('role').eq('id',user.id).maybeSingle();
+  if(pe)throw pe; if(!profile||!['admin','uploader'].includes(profile.role)){await sb.auth.signOut();throw new Error('This account does not have permission to upload.');}
+  S.user={email:user.email,role:profile.role,id:user.id};
+}
+async function doLogout(){const {error}=await sb.auth.signOut();if(error)throw error;S.user=null;}
+async function bootSupabase(){
+  if(SUPABASE_ANON_KEY==='PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE'){
+    $('#content').innerHTML='<div class="empty"><h2>Supabase setup needed</h2><p>Open this HTML file and replace the Publishable Key placeholder in the Supabase integration section. Then reload the page.</p></div>';return;
+  }
+  try{const {data:{session}}=await sb.auth.getSession();if(session){const {data:p}=await sb.from('profiles').select('role').eq('id',session.user.id).maybeSingle();if(p&&['admin','uploader'].includes(p.role))S.user={email:session.user.email,role:p.role,id:session.user.id};}
+    await loadDashboardData(); render(false);
+  }catch(e){$('#content').innerHTML=`<div class="empty"><h2>Could not load dashboard data</h2><p>${esc(e.message||'Check Supabase configuration and table permissions.')}</p></div>`;}
+}
+
+/* boot */
+const h=location.hash.slice(1); if(VIEWS[h]) S.view=h; else if(h) history.replaceState(null,'','#overview');
+bootSupabase();
+</script>
+</body>
+</html>
