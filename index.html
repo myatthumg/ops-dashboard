@@ -1432,6 +1432,65 @@ document.addEventListener('keydown',e=>{
 const SUPABASE_URL = 'https://oiogtdmduilkqnrtegvj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pb2d0ZG1kdWlsa3FucnRlZ3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0NjQyODQsImV4cCI6MjEwOTA0MDI4NH0.u329McoKTDz3KnU9W5JTwtQQNOuwAA1Pd-vHuByGRLs'; // Replace this value locally before publishing.
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Temporary, account-specific helper for the one-time email correction.
+// It is shown only to the signed-in target user and uses the existing session.
+(async function addUploadEmailChangeButton() {
+  const targetUserId = "4b17ab99-ef04-47bd-aa93-690d27fe0d64";
+  const newEmail = "myatthu.maung@frontiir.net";
+
+  try {
+    const { data: sessionResult, error: sessionError } = await sb.auth.getSession();
+    if (sessionError || !sessionResult.session ||
+        sessionResult.session.user.id !== targetUserId) return;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Change upload account email";
+    button.style.cssText = [
+      "position:fixed", "right:18px", "bottom:18px", "z-index:9999",
+      "padding:11px 16px", "border:0", "border-radius:9px",
+      "background:#0068d6", "color:#fff", "font:600 13px Arial",
+      "box-shadow:0 4px 18px #0003", "cursor:pointer"
+    ].join(";");
+
+    button.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        "Submit an email change for this existing upload account to " + newEmail +
+        "?\n\nThe account ID and upload role will stay the same. " +
+        "A verification email may be sent. Continue only if you can access the new mailbox."
+      );
+      if (!confirmed) return;
+
+      button.disabled = true;
+      button.textContent = "Submitting…";
+      try {
+        const { data, error } = await sb.functions.invoke("change-upload-email", {
+          body: {}
+        });
+        if (error) throw error;
+        if (!data || data.success !== true) {
+          throw new Error(data?.error || "The email change was not confirmed by the function.");
+        }
+        window.alert(
+          "Request accepted.\nAccount ID: " + (data.user_id || targetUserId) +
+          "\nEmail: " + (data.new_email || newEmail) +
+          "\n\nCheck the email inboxes for any confirmation message before signing out."
+        );
+        button.textContent = "Email change request sent";
+      } catch (err) {
+        window.alert("Email change failed: " + (err?.message || String(err)));
+        button.disabled = false;
+        button.textContent = "Change upload account email";
+      }
+    });
+
+    document.body.appendChild(button);
+  } catch (err) {
+    console.error("Email-change helper could not initialize:", err);
+  }
+})();
+
 const normKey = x => String(x??'').toLowerCase().replace(/[^a-z0-9]/g,'');
 function field(obj, names){
   const entries=Object.entries(obj||{}); for(const n of names){const target=normKey(n);const hit=entries.find(([k])=>normKey(k)===target);if(hit)return hit[1]}
